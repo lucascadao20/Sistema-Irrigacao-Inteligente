@@ -1,0 +1,8 @@
+# Configuracoes do Sistema de Irrigacao Inteligente
+# Copie este arquivo para config.properties e preencha com sua chave da API
+openweathermap.api.key=SUA_CHAVE_AQUI
+openweathermap.base.url=https://api.openweathermap.org/data/2.5
+
+# Cidade padrao para consulta climatica
+cidade.padrao=Sao Paulo
+cidade.pais=BR

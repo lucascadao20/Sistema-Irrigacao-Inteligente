@@ -1,0 +1,28 @@
+# Build
+target/
+*.class
+*.jar
+
+# Logs
+logs/
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.project
+.classpath
+.settings/
+.factorypath
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Configuracao com segredos
+src/main/resources/config.properties
+
+# Claude/Superpowers (workspace local)
+.claude/
+docs/superpowers/
