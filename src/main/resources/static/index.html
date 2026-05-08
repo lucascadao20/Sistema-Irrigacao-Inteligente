@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sistema de Irrigação Inteligente</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <header class="topbar">
+        <div class="brand">
+            <div class="brand-logo">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C12 2 5 9 5 14a7 7 0 0 0 14 0c0-5-7-12-7-12z" fill="currentColor"/>
+                </svg>
+            </div>
+            <div>
+                <div class="brand-name">Irrigação Inteligente</div>
+                <div class="brand-tag">Monitoramento em tempo real</div>
+            </div>
+        </div>
+        <div class="topbar-meta">
+            <div class="status-pill" id="conn-pill">
+                <span class="dot"></span>
+                <span id="conn-text">Conectando...</span>
+            </div>
+            <div class="clock" id="clock">--:--:--</div>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="hero-left">
+                <div class="hero-label">Status do sistema</div>
+                <div class="status-display">
+                    <div class="status-badge-lg" id="status-badge">
+                        <span class="status-icon" id="status-icon">⏳</span>
+                        <span id="status-text">Aguardando primeiro ciclo</span>
+                    </div>
+                </div>
+                <p class="hero-motivo" id="status-motivo">Os dados aparecerão em alguns segundos.</p>
+                <div class="hero-strategy">
+                    <span class="hero-strategy-label">Estratégia ativa</span>
+                    <span class="hero-strategy-value" id="estrategia">—</span>
+                </div>
+            </div>
+
+            <div class="hero-right">
+                <div class="gauge-wrap">
+                    <svg class="gauge" viewBox="0 0 200 200">
+                        <circle class="gauge-bg" cx="100" cy="100" r="85"/>
+                        <circle class="gauge-fill" id="gauge-fill" cx="100" cy="100" r="85"/>
+                    </svg>
+                    <div class="gauge-content">
+                        <div class="gauge-value" id="umidade-solo">—</div>
+                        <div class="gauge-label">Umidade do solo</div>
+                    </div>
+                </div>
+                <div class="gauge-meta">
+                    <div class="gauge-marker" id="marker-min">
+                        <span>Mínimo</span>
+                        <strong id="cultura-min">—</strong>
+                    </div>
+                    <div class="gauge-marker" id="marker-ideal">
+                        <span>Ideal</span>
+                        <strong id="cultura-ideal">—</strong>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="row-controle">
+            <div class="cultura-card">
+                <div class="cultura-icon">🌾</div>
+                <div class="cultura-body">
+                    <label for="cultura">Cultura monitorada</label>
+                    <select id="cultura"></select>
+                </div>
+                <div class="cultura-stats">
+                    <div><span>Kc</span><strong id="cultura-kc">—</strong></div>
+                    <div><span>Necessidade</span><strong id="cultura-nec">—</strong></div>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-card-head">
+                    <span class="metric-icon">💧</span>
+                    <span>Volume de água</span>
+                </div>
+                <div class="metric-card-value" id="volume-agua">—</div>
+                <div class="metric-card-sub">litros · último ciclo</div>
+            </div>
+        </section>
+
+        <section class="grid-clima-grafico">
+            <div class="card clima-card">
+                <header class="card-head">
+                    <h2><span id="clima-emoji">🌤️</span> Clima atual</h2>
+                    <span class="card-head-sub" id="clima-cidade">—</span>
+                </header>
+                <div class="clima-grid">
+                    <div class="clima-big">
+                        <div class="clima-temp" id="clima-temp">—</div>
+                        <div class="clima-desc" id="clima-desc">—</div>
+                    </div>
+                    <div class="clima-list">
+                        <div class="clima-item">
+                            <span>💨 Vento</span>
+                            <strong id="clima-vento">—</strong>
+                        </div>
+                        <div class="clima-item">
+                            <span>💦 Umidade do ar</span>
+                            <strong id="clima-umar">—</strong>
+                        </div>
+                        <div class="clima-item">
+                            <span>🌧️ Chuva</span>
+                            <strong id="clima-chuva">—</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card grafico-card">
+                <header class="card-head">
+                    <h2>📊 Histórico</h2>
+                    <span class="card-head-sub">Últimos ciclos</span>
+                </header>
+                <canvas id="grafico-umidade"></canvas>
+            </div>
+        </section>
+
+        <section class="card alertas-card">
+            <header class="card-head">
+                <h2>🔔 Alertas</h2>
+                <span class="card-head-sub" id="alertas-count">0 mensagens</span>
+            </header>
+            <ul id="lista-alertas" class="alertas">
+                <li class="alerta-empty">
+                    <div class="alerta-empty-icon">📡</div>
+                    <div>
+                        <strong>Aguardando o primeiro ciclo de avaliação</strong>
+                        <p>Os alertas do motor de regras aparecerão aqui em tempo real.</p>
+                    </div>
+                </li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <small>Atualização do dashboard a cada 3s · Ciclos de simulação a cada 5s</small>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

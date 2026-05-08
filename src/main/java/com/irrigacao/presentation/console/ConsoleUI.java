@@ -20,6 +20,7 @@ public class ConsoleUI {
         this.input = input;
     }
 
+    @SuppressWarnings("BusyWait")
     public void executarModoTempoReal() {
         System.out.println(formatter.formatarCabecalho(
                 "SISTEMA DE IRRIGACAO INTELIGENTE - Modo: TEMPO REAL"));
