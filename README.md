@@ -109,7 +109,9 @@ Abre um servidor HTTP local com simulação automática rodando a cada 5s:
 mvn exec:java "-Dexec.args=--web"
 ```
 
-Acesse **http://localhost:7070**. Para usar outra porta:
+Acesse **http://localhost:7070**. 
+
+Para usar outra porta:
 
 ```powershell
 mvn exec:java "-Dexec.args=--web 8080"
