@@ -1,9 +1,9 @@
 package com.irrigacao;
 
-import com.irrigacao.presentation.console.ConsoleFormatter;
-import com.irrigacao.presentation.console.ConsoleInputHandler;
-import com.irrigacao.presentation.console.ConsoleUI;
-import com.irrigacao.presentation.web.WebServer;
+import com.irrigacao.infrastructure.console.FormatadorDeConsole;
+import com.irrigacao.infrastructure.console.LeitorDeEntrada;
+import com.irrigacao.infrastructure.console.InterfaceConsole;
+import com.irrigacao.infrastructure.web.ServidorWeb;
 
 import java.util.Scanner;
 
@@ -18,13 +18,13 @@ public class Main {
             if (args.length > 1) {
                 try { porta = Integer.parseInt(args[1]); } catch (NumberFormatException ignored) {}
             }
-            new WebServer().iniciar(porta);
+            new ServidorWeb().iniciar(porta);
             return;
         }
 
-        ConsoleFormatter formatter = new ConsoleFormatter();
-        ConsoleInputHandler input = new ConsoleInputHandler(new Scanner(System.in));
-        ConsoleUI ui = new ConsoleUI(formatter, input);
+        FormatadorDeConsole formatador = new FormatadorDeConsole();
+        LeitorDeEntrada leitor = new LeitorDeEntrada(new Scanner(System.in));
+        InterfaceConsole ui = new InterfaceConsole(formatador, leitor);
 
         if (modo.equals("--demo")) {
             ui.executarModoDemo();

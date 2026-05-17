@@ -28,34 +28,37 @@ Sistema Java que automatiza decisões de irrigação combinando dados de sensore
 
 ## Arquitetura
 
-Layered Architecture com 4 camadas e dependências fluindo de fora para dentro:
+Arquitetura em 3 camadas com dependências fluindo de fora para dentro:
 
 ```
-presentation  →  application  →  domain
-                      ↑
-              infrastructure
+infrastructure  →  application  →  domain
 ```
+
+| Camada | Responsabilidade |
+|--------|-----------------|
+| **domain** | O QUE o sistema É — entidades puras, regras de cálculo e estratégias |
+| **application** | O QUE o sistema FAZ — orquestração de casos de uso e interfaces (contratos) |
+| **infrastructure** | COMO o sistema se conecta ao mundo — adaptadores de entrada e saída |
 
 ```
 com.irrigacao
 ├── Main.java
-├── domain/                  Entidades puras + regras de cálculo
-│   ├── model/               Sensor, Cultura, Irrigacao, DadosClimaticos, Alerta, LeituraSensor
-│   ├── enums/               TipoSensor, StatusIrrigacao, NivelAlerta
-│   └── strategy/            IrrigacaoStrategy + 3 modos
-├── application/             Orquestração de negócio
-│   ├── service/             CicloIrrigacaoService, MotorRegras, GerenciadorSensores, ProcessadorDados
-│   ├── port/                ClimaService, CulturaRepository, NotificadorAlerta (interfaces)
-│   └── factory/             StrategyFactory
-├── infrastructure/          Implementações concretas
-│   ├── api/                 OpenWeatherMapClient + OpenWeatherMapClimaService (Adapter)
-│   ├── persistence/         InMemoryCulturaRepository
-│   ├── notification/        ConsoleNotificadorAlerta, LogNotificadorAlerta, CompositeNotificador
-│   ├── config/              AppConfig (injeção de dependências manual)
-│   └── simulator/           SimuladorSensores
-└── presentation/            Interface de usuário
-    ├── console/             ConsoleUI, ConsoleFormatter, ConsoleInputHandler
-    └── web/                 WebServer, DashboardState, SimulationRunner, WebNotificadorAlerta
+├── domain/                     Entidades puras + regras de cálculo
+│   ├── modelo/                 Sensor, Cultura, Irrigacao, DadosClimaticos, Alerta, LeituraSensor
+│   ├── enums/                  TipoSensor, StatusIrrigacao, NivelAlerta
+│   └── estrategia/            EstrategiaDeIrrigacao + 3 modos
+├── application/                Orquestração de negócio
+│   ├── servico/                ServicoDeCicloIrrigacao, MotorDeRegras, GerenciadorDeSensores, ProcessadorDeDados
+│   ├── interfaces/             ServicoDeClima, RepositorioDeCultura, NotificadorDeAlerta
+│   └── fabrica/                FabricaDeEstrategia
+└── infrastructure/             Adaptadores com o mundo externo
+    ├── clima/                  ClienteOpenWeatherMap + ServicoDeClimaOpenWeatherMap
+    ├── persistencia/           RepositorioDeCulturaEmMemoria
+    ├── notificacao/            NotificadorDeAlertaConsole, NotificadorDeAlertaLog, NotificadorComposto
+    ├── simulador/              SimuladorSensores
+    ├── config/                 ConfiguracaoApp (injeção de dependências manual)
+    ├── console/                InterfaceConsole, FormatadorDeConsole, LeitorDeEntrada
+    └── web/                    ServidorWeb, EstadoDoDashboard, ExecutorDeSimulacao, NotificadorDeAlertaWeb
 ```
 
 Frontend estático em `src/main/resources/static/` (`index.html`, `app.js`, `style.css`).
@@ -64,13 +67,13 @@ Frontend estático em `src/main/resources/static/` (`index.html`, `app.js`, `sty
 
 | Pattern | Aplicação |
 |---------|-----------|
-| Strategy | `IrrigacaoStrategy` + 3 modos de irrigação |
-| Factory Method | `StrategyFactory` seleciona estratégia conforme contexto |
+| Strategy | `EstrategiaDeIrrigacao` + 3 modos de irrigação |
+| Factory Method | `FabricaDeEstrategia` seleciona estratégia conforme contexto |
 | Builder | `Irrigacao.builder()`, `DadosClimaticos.builder()` |
-| Composite | `CompositeNotificador` despacha alertas para múltiplos destinos |
-| Repository | `CulturaRepository` / `InMemoryCulturaRepository` |
-| Adapter | `OpenWeatherMapClimaService` adapta API externa ao port interno |
-| Facade | `CicloIrrigacaoService` simplifica uso do sistema |
+| Composite | `NotificadorComposto` despacha alertas para múltiplos destinos |
+| Repository | `RepositorioDeCultura` / `RepositorioDeCulturaEmMemoria` |
+| Adapter | `ServicoDeClimaOpenWeatherMap` adapta API externa à interface interna |
+| Facade | `ServicoDeCicloIrrigacao` simplifica uso do sistema |
 
 ## Pré-requisitos
 
@@ -183,7 +186,7 @@ Logs são gravados em `logs/irrigacao.log` (rotação diária, retenção de 30 
 
 ## Lógica de decisão
 
-A `StrategyFactory` seleciona a estratégia conforme o estado:
+A `FabricaDeEstrategia` seleciona a estratégia conforme o estado:
 
 1. **Emergencial** — umidade do solo < 70% do mínimo da cultura
 2. **Úmido** — previsão de chuva ou umidade do ar > 80%
@@ -201,4 +204,4 @@ src/main/resources/static/
 └── app.js           Polling + Chart.js + atualização incremental do gauge
 ```
 
-O servidor (`WebServer`) usa Gson como `JsonMapper` do Javalin para serializar respostas. A simulação roda em thread daemon (`SimulationRunner`) que dispara um ciclo a cada 5 segundos e atualiza o `DashboardState` (estado em memória, thread-safe via `ConcurrentLinkedDeque`). Alertas são empurrados ao estado por `WebNotificadorAlerta`, que implementa o port `NotificadorAlerta` e é combinado com `LogNotificadorAlerta` via `CompositeNotificador`.
+O servidor (`ServidorWeb`) usa Gson como `JsonMapper` do Javalin para serializar respostas. A simulação roda em thread daemon (`ExecutorDeSimulacao`) que dispara um ciclo a cada 5 segundos e atualiza o `EstadoDoDashboard` (estado em memória, thread-safe via `ConcurrentLinkedDeque`). Alertas são empurrados ao estado por `NotificadorDeAlertaWeb`, que implementa a interface `NotificadorDeAlerta` e é combinado com `NotificadorDeAlertaLog` via `NotificadorComposto`.
