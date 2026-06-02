@@ -5,7 +5,7 @@ import com.irrigacao.dados.GerenciadorDeSensores;
 import com.irrigacao.modelo.Cultura;
 import com.irrigacao.modelo.DadosClimaticos;
 import com.irrigacao.modelo.Irrigacao;
-import com.irrigacao.infrastructure.config.ConfiguracaoApp;
+import com.irrigacao.ConfiguracaoApp;
 import com.irrigacao.dados.SimuladorSensores;
 
 import java.time.LocalDateTime;

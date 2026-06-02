@@ -1,4 +1,4 @@
-package com.irrigacao.infrastructure.config;
+package com.irrigacao;
 
 import com.irrigacao.negocio.FabricaDeEstrategia;
 import com.irrigacao.dados.ServicoDeClima;
