@@ -1,7 +1,7 @@
 package com.irrigacao.infrastructure.web;
 
 import com.irrigacao.dados.ServicoDeClima;
-import com.irrigacao.application.servico.ServicoDeCicloIrrigacao;
+import com.irrigacao.negocio.ServicoDeCicloIrrigacao;
 import com.irrigacao.modelo.DadosClimaticos;
 import com.irrigacao.modelo.Irrigacao;
 import com.irrigacao.dados.SimuladorSensores;

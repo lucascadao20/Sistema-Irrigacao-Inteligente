@@ -1,4 +1,4 @@
-package com.irrigacao.application.servico;
+package com.irrigacao.negocio;
 
 import com.irrigacao.dados.ServicoDeClima;
 import com.irrigacao.dados.RepositorioDeCultura;

@@ -13,13 +13,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
-import com.irrigacao.application.fabrica.FabricaDeEstrategia;
+import com.irrigacao.negocio.FabricaDeEstrategia;
 import com.irrigacao.dados.ServicoDeClima;
 import com.irrigacao.dados.RepositorioDeCultura;
 import com.irrigacao.dados.NotificadorDeAlerta;
-import com.irrigacao.application.servico.ServicoDeCicloIrrigacao;
+import com.irrigacao.negocio.ServicoDeCicloIrrigacao;
 import com.irrigacao.dados.GerenciadorDeSensores;
-import com.irrigacao.application.servico.MotorDeRegras;
+import com.irrigacao.negocio.MotorDeRegras;
 import com.irrigacao.dados.ProcessadorDeDados;
 import com.irrigacao.modelo.Alerta;
 import com.irrigacao.modelo.Cultura;

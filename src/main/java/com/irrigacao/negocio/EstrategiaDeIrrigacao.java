@@ -1,4 +1,4 @@
-package com.irrigacao.domain.estrategia;
+package com.irrigacao.negocio;
 
 import com.irrigacao.modelo.Cultura;
 import com.irrigacao.modelo.DadosClimaticos;

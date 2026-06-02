@@ -1,6 +1,6 @@
-package com.irrigacao.application.servico;
+package com.irrigacao.negocio;
 
-import com.irrigacao.application.fabrica.FabricaDeEstrategia;
+import com.irrigacao.negocio.FabricaDeEstrategia;
 import com.irrigacao.dados.NotificadorDeAlerta;
 import com.irrigacao.modelo.NivelAlerta;
 import com.irrigacao.modelo.StatusIrrigacao;
@@ -8,7 +8,7 @@ import com.irrigacao.modelo.Alerta;
 import com.irrigacao.modelo.Cultura;
 import com.irrigacao.modelo.DadosClimaticos;
 import com.irrigacao.modelo.Irrigacao;
-import com.irrigacao.domain.estrategia.EstrategiaDeIrrigacao;
+import com.irrigacao.negocio.EstrategiaDeIrrigacao;
 
 import java.util.UUID;
 

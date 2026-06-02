@@ -1,6 +1,6 @@
 package com.irrigacao.infrastructure.console;
 
-import com.irrigacao.application.servico.ServicoDeCicloIrrigacao;
+import com.irrigacao.negocio.ServicoDeCicloIrrigacao;
 import com.irrigacao.dados.GerenciadorDeSensores;
 import com.irrigacao.modelo.Cultura;
 import com.irrigacao.modelo.DadosClimaticos;

@@ -1,12 +1,12 @@
 package com.irrigacao.infrastructure.config;
 
-import com.irrigacao.application.fabrica.FabricaDeEstrategia;
+import com.irrigacao.negocio.FabricaDeEstrategia;
 import com.irrigacao.dados.ServicoDeClima;
 import com.irrigacao.dados.RepositorioDeCultura;
 import com.irrigacao.dados.NotificadorDeAlerta;
-import com.irrigacao.application.servico.ServicoDeCicloIrrigacao;
+import com.irrigacao.negocio.ServicoDeCicloIrrigacao;
 import com.irrigacao.dados.GerenciadorDeSensores;
-import com.irrigacao.application.servico.MotorDeRegras;
+import com.irrigacao.negocio.MotorDeRegras;
 import com.irrigacao.dados.ProcessadorDeDados;
 import com.irrigacao.dados.ClienteOpenWeatherMap;
 import com.irrigacao.dados.ServicoDeClimaOpenWeatherMap;

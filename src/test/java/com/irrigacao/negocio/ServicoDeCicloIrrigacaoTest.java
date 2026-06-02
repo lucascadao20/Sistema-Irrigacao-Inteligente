@@ -1,6 +1,6 @@
-package com.irrigacao.application.servico;
+package com.irrigacao.negocio;
 
-import com.irrigacao.application.fabrica.FabricaDeEstrategia;
+import com.irrigacao.negocio.FabricaDeEstrategia;
 import com.irrigacao.dados.ServicoDeClima;
 import com.irrigacao.dados.RepositorioDeCultura;
 import com.irrigacao.dados.NotificadorDeAlerta;
