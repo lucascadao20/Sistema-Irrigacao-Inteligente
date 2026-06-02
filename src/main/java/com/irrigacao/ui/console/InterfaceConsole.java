@@ -1,4 +1,4 @@
-package com.irrigacao.infrastructure.console;
+package com.irrigacao.ui.console;
 
 import com.irrigacao.negocio.ServicoDeCicloIrrigacao;
 import com.irrigacao.dados.GerenciadorDeSensores;

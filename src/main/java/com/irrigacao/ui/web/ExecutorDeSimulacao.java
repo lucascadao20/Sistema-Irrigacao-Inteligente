@@ -1,4 +1,4 @@
-package com.irrigacao.infrastructure.web;
+package com.irrigacao.ui.web;
 
 import com.irrigacao.dados.ServicoDeClima;
 import com.irrigacao.negocio.ServicoDeCicloIrrigacao;

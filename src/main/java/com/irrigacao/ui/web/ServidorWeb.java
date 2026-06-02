@@ -1,4 +1,4 @@
-package com.irrigacao.infrastructure.web;
+package com.irrigacao.ui.web;
 
 import java.io.IOException;
 import java.io.InputStream;

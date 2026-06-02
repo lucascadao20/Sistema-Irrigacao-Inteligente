@@ -1,4 +1,4 @@
-package com.irrigacao.infrastructure.console;
+package com.irrigacao.ui.console;
 
 import com.irrigacao.modelo.Cultura;
 import com.irrigacao.modelo.DadosClimaticos;

@@ -1,4 +1,4 @@
-package com.irrigacao.infrastructure.web;
+package com.irrigacao.ui.web;
 
 import com.irrigacao.modelo.Alerta;
 import com.irrigacao.modelo.DadosClimaticos;

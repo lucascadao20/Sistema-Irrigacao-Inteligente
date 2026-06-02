@@ -1,9 +1,9 @@
 package com.irrigacao;
 
-import com.irrigacao.infrastructure.console.FormatadorDeConsole;
-import com.irrigacao.infrastructure.console.LeitorDeEntrada;
-import com.irrigacao.infrastructure.console.InterfaceConsole;
-import com.irrigacao.infrastructure.web.ServidorWeb;
+import com.irrigacao.ui.console.FormatadorDeConsole;
+import com.irrigacao.ui.console.LeitorDeEntrada;
+import com.irrigacao.ui.console.InterfaceConsole;
+import com.irrigacao.ui.web.ServidorWeb;
 
 import java.util.Scanner;
 
