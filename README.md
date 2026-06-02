@@ -28,37 +28,38 @@ Sistema Java que automatiza decisões de irrigação combinando dados de sensore
 
 ## Arquitetura
 
-Arquitetura em 3 camadas com dependências fluindo de fora para dentro:
+Arquitetura em 4 camadas com dependências fluindo de fora para dentro:
 
 ```
-infrastructure  →  application  →  domain
+ui  →  negocio  →  dados  →  modelo
 ```
 
 | Camada | Responsabilidade |
 |--------|-----------------|
-| **domain** | O QUE o sistema É — entidades puras, regras de cálculo e estratégias |
-| **application** | O QUE o sistema FAZ — orquestração de casos de uso e interfaces (contratos) |
-| **infrastructure** | COMO o sistema se conecta ao mundo — adaptadores de entrada e saída |
+| **modelo** | Os dados do domínio — entidades e enums. Não depende de ninguém |
+| **negocio** | As regras — estratégias, fábrica, motor de regras e o serviço de ciclo |
+| **dados** | As fontes — clima (API), catálogo de culturas, sensores e notificadores |
+| **ui** | A apresentação — console e dashboard web |
 
 ```
 com.irrigacao
 ├── Main.java
-├── domain/                     Entidades puras + regras de cálculo
-│   ├── modelo/                 Sensor, Cultura, Irrigacao, DadosClimaticos, Alerta, LeituraSensor
-│   ├── enums/                  TipoSensor, StatusIrrigacao, NivelAlerta
-│   └── estrategia/            EstrategiaDeIrrigacao + 3 modos
-├── application/                Orquestração de negócio
-│   ├── servico/                ServicoDeCicloIrrigacao, MotorDeRegras, GerenciadorDeSensores, ProcessadorDeDados
-│   ├── interfaces/             ServicoDeClima, RepositorioDeCultura, NotificadorDeAlerta
-│   └── fabrica/                FabricaDeEstrategia
-└── infrastructure/             Adaptadores com o mundo externo
-    ├── clima/                  ClienteOpenWeatherMap + ServicoDeClimaOpenWeatherMap
-    ├── persistencia/           RepositorioDeCulturaEmMemoria
-    ├── notificacao/            NotificadorDeAlertaConsole, NotificadorDeAlertaLog, NotificadorComposto
-    ├── simulador/              SimuladorSensores
-    ├── config/                 ConfiguracaoApp (injeção de dependências manual)
-    ├── console/                InterfaceConsole, FormatadorDeConsole, LeitorDeEntrada
-    └── web/                    ServidorWeb, EstadoDoDashboard, ExecutorDeSimulacao, NotificadorDeAlertaWeb
+├── ConfiguracaoApp.java         montagem do sistema (injeção de dependências manual)
+├── modelo/                      entidades + enums — não depende de ninguém
+│   ├── Sensor, LeituraSensor, Cultura, Irrigacao, DadosClimaticos, Alerta
+│   └── TipoSensor, StatusIrrigacao, NivelAlerta
+├── negocio/                     regras e orquestração
+│   ├── EstrategiaDeIrrigacao + EstrategiaModoSeco/Umido/Emergencial
+│   ├── FabricaDeEstrategia
+│   └── MotorDeRegras, ServicoDeCicloIrrigacao
+├── dados/                       fontes externas, persistência e notificadores
+│   ├── ServicoDeClima + ServicoDeClimaOpenWeatherMap + ClienteOpenWeatherMap
+│   ├── RepositorioDeCultura + RepositorioDeCulturaEmMemoria
+│   ├── NotificadorDeAlerta + NotificadorDeAlertaConsole/Log + NotificadorComposto
+│   └── SimuladorSensores, GerenciadorDeSensores, ProcessadorDeDados
+└── ui/                          apresentação
+    ├── console/                 InterfaceConsole, FormatadorDeConsole, LeitorDeEntrada
+    └── web/                     ServidorWeb, EstadoDoDashboard, ExecutorDeSimulacao, NotificadorDeAlertaWeb
 ```
 
 Frontend estático em `src/main/resources/static/` (`index.html`, `app.js`, `style.css`).
@@ -106,7 +107,7 @@ cidade.pais=BR
 
 ### Modo dashboard web (recomendado)
 
-Abre um servidor HTTP local com simulação automática rodando a cada 5s:
+Abre um servidor HTTP local com simulação automática rodando a cada 30s:
 
 ```powershell
 mvn exec:java "-Dexec.args=--web"
@@ -170,7 +171,7 @@ O frontend faz polling em `/api/state` a cada 3s.
 mvn test
 ```
 
-Cobertura: **44 testes unitários** cobrindo domain, application e infrastructure.
+Cobertura: **45 testes unitários** cobrindo modelo, negocio e dados.
 
 ## Build
 
@@ -189,8 +190,8 @@ Logs são gravados em `logs/irrigacao.log` (rotação diária, retenção de 30 
 A `FabricaDeEstrategia` seleciona a estratégia conforme o estado:
 
 1. **Emergencial** — umidade do solo < 70% do mínimo da cultura
-2. **Úmido** — previsão de chuva ou umidade do ar > 80%
-3. **Seco** — umidade do solo abaixo do mínimo (sem chuva)
+2. **Seco** — umidade do solo abaixo do mínimo (sem chuva)
+3. **Úmido** — previsão de chuva ou umidade do ar > 80%
 4. **Aguardando** — umidade adequada, nenhuma ação necessária
 
 Cada estratégia calcula o volume de água considerando déficit hídrico, coeficiente de cultura e ajustes por temperatura.
@@ -204,4 +205,4 @@ src/main/resources/static/
 └── app.js           Polling + Chart.js + atualização incremental do gauge
 ```
 
-O servidor (`ServidorWeb`) usa Gson como `JsonMapper` do Javalin para serializar respostas. A simulação roda em thread daemon (`ExecutorDeSimulacao`) que dispara um ciclo a cada 5 segundos e atualiza o `EstadoDoDashboard` (estado em memória, thread-safe via `ConcurrentLinkedDeque`). Alertas são empurrados ao estado por `NotificadorDeAlertaWeb`, que implementa a interface `NotificadorDeAlerta` e é combinado com `NotificadorDeAlertaLog` via `NotificadorComposto`.
+O servidor (`ServidorWeb`) usa Gson como `JsonMapper` do Javalin para serializar respostas. A simulação roda em thread daemon (`ExecutorDeSimulacao`) que dispara um ciclo a cada 30 segundos e atualiza o `EstadoDoDashboard` (estado em memória, thread-safe via `ConcurrentLinkedDeque`). Alertas são empurrados ao estado por `NotificadorDeAlertaWeb`, que implementa a interface `NotificadorDeAlerta` e é combinado com `NotificadorDeAlertaLog` via `NotificadorComposto`.
