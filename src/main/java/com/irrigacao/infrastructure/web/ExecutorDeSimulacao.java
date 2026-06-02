@@ -2,8 +2,8 @@ package com.irrigacao.infrastructure.web;
 
 import com.irrigacao.application.interfaces.ServicoDeClima;
 import com.irrigacao.application.servico.ServicoDeCicloIrrigacao;
-import com.irrigacao.domain.modelo.DadosClimaticos;
-import com.irrigacao.domain.modelo.Irrigacao;
+import com.irrigacao.modelo.DadosClimaticos;
+import com.irrigacao.modelo.Irrigacao;
 import com.irrigacao.infrastructure.simulador.SimuladorSensores;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

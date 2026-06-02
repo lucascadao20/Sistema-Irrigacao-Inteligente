@@ -1,4 +1,4 @@
-package com.irrigacao.domain.enums;
+package com.irrigacao.modelo;
 
 public enum NivelAlerta {
     INFO("Informativo"),

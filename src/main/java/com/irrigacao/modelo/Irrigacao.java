@@ -1,6 +1,6 @@
-package com.irrigacao.domain.modelo;
+package com.irrigacao.modelo;
 
-import com.irrigacao.domain.enums.StatusIrrigacao;
+import com.irrigacao.modelo.StatusIrrigacao;
 import java.time.LocalDateTime;
 
 public class Irrigacao {

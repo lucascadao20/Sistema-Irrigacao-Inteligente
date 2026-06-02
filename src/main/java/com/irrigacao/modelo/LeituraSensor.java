@@ -1,4 +1,4 @@
-package com.irrigacao.domain.modelo;
+package com.irrigacao.modelo;
 
 import java.time.LocalDateTime;
 

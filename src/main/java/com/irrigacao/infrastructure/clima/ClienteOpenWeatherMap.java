@@ -3,7 +3,7 @@ package com.irrigacao.infrastructure.clima;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.irrigacao.domain.modelo.DadosClimaticos;
+import com.irrigacao.modelo.DadosClimaticos;
 
 import java.io.IOException;
 import java.net.URI;

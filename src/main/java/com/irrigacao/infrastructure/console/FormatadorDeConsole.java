@@ -1,8 +1,8 @@
 package com.irrigacao.infrastructure.console;
 
-import com.irrigacao.domain.modelo.Cultura;
-import com.irrigacao.domain.modelo.DadosClimaticos;
-import com.irrigacao.domain.modelo.Irrigacao;
+import com.irrigacao.modelo.Cultura;
+import com.irrigacao.modelo.DadosClimaticos;
+import com.irrigacao.modelo.Irrigacao;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

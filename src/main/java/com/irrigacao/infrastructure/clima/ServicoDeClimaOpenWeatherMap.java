@@ -1,7 +1,7 @@
 package com.irrigacao.infrastructure.clima;
 
 import com.irrigacao.application.interfaces.ServicoDeClima;
-import com.irrigacao.domain.modelo.DadosClimaticos;
+import com.irrigacao.modelo.DadosClimaticos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -1,7 +1,7 @@
 package com.irrigacao.application.fabrica;
 
-import com.irrigacao.domain.modelo.Cultura;
-import com.irrigacao.domain.modelo.DadosClimaticos;
+import com.irrigacao.modelo.Cultura;
+import com.irrigacao.modelo.DadosClimaticos;
 import com.irrigacao.domain.estrategia.EstrategiaDeIrrigacao;
 import com.irrigacao.domain.estrategia.EstrategiaModoEmergencial;
 import com.irrigacao.domain.estrategia.EstrategiaModoSeco;

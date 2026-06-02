@@ -1,8 +1,8 @@
 package com.irrigacao.infrastructure.notificacao;
 
 import com.irrigacao.application.interfaces.NotificadorDeAlerta;
-import com.irrigacao.domain.enums.NivelAlerta;
-import com.irrigacao.domain.modelo.Alerta;
+import com.irrigacao.modelo.NivelAlerta;
+import com.irrigacao.modelo.Alerta;
 
 public class NotificadorDeAlertaConsole implements NotificadorDeAlerta {
     private final String nomeAgricultor;

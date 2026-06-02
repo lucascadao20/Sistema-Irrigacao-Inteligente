@@ -1,7 +1,7 @@
 package com.irrigacao.infrastructure.web;
 
 import com.irrigacao.application.interfaces.NotificadorDeAlerta;
-import com.irrigacao.domain.modelo.Alerta;
+import com.irrigacao.modelo.Alerta;
 
 public class NotificadorDeAlertaWeb implements NotificadorDeAlerta {
     private final EstadoDoDashboard state;

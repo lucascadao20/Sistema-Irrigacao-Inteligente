@@ -2,12 +2,12 @@ package com.irrigacao.application.servico;
 
 import com.irrigacao.application.fabrica.FabricaDeEstrategia;
 import com.irrigacao.application.interfaces.NotificadorDeAlerta;
-import com.irrigacao.domain.enums.NivelAlerta;
-import com.irrigacao.domain.enums.StatusIrrigacao;
-import com.irrigacao.domain.modelo.Alerta;
-import com.irrigacao.domain.modelo.Cultura;
-import com.irrigacao.domain.modelo.DadosClimaticos;
-import com.irrigacao.domain.modelo.Irrigacao;
+import com.irrigacao.modelo.NivelAlerta;
+import com.irrigacao.modelo.StatusIrrigacao;
+import com.irrigacao.modelo.Alerta;
+import com.irrigacao.modelo.Cultura;
+import com.irrigacao.modelo.DadosClimaticos;
+import com.irrigacao.modelo.Irrigacao;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

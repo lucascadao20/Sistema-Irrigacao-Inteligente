@@ -1,9 +1,9 @@
 package com.irrigacao.infrastructure.simulador;
 
 import com.irrigacao.application.servico.GerenciadorDeSensores;
-import com.irrigacao.domain.enums.TipoSensor;
-import com.irrigacao.domain.modelo.DadosClimaticos;
-import com.irrigacao.domain.modelo.Sensor;
+import com.irrigacao.modelo.TipoSensor;
+import com.irrigacao.modelo.DadosClimaticos;
+import com.irrigacao.modelo.Sensor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

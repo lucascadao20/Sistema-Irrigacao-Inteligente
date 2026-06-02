@@ -1,6 +1,6 @@
 package com.irrigacao.infrastructure.console;
 
-import com.irrigacao.domain.modelo.Cultura;
+import com.irrigacao.modelo.Cultura;
 
 import java.util.Map;
 import java.util.Scanner;

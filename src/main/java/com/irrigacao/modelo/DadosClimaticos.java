@@ -1,4 +1,4 @@
-package com.irrigacao.domain.modelo;
+package com.irrigacao.modelo;
 
 public class DadosClimaticos {
     private final double temperatura;

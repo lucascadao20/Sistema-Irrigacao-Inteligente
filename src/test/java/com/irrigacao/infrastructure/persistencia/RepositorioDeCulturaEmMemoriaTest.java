@@ -1,6 +1,6 @@
 package com.irrigacao.infrastructure.persistencia;
 
-import com.irrigacao.domain.modelo.Cultura;
+import com.irrigacao.modelo.Cultura;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;

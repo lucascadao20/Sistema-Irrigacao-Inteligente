@@ -1,8 +1,8 @@
 package com.irrigacao.application.servico;
 
-import com.irrigacao.domain.enums.TipoSensor;
-import com.irrigacao.domain.modelo.LeituraSensor;
-import com.irrigacao.domain.modelo.Sensor;
+import com.irrigacao.modelo.TipoSensor;
+import com.irrigacao.modelo.LeituraSensor;
+import com.irrigacao.modelo.Sensor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.time.LocalDateTime;

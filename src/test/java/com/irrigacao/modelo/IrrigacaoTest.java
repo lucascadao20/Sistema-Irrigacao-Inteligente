@@ -1,6 +1,6 @@
-package com.irrigacao.domain.modelo;
+package com.irrigacao.modelo;
 
-import com.irrigacao.domain.enums.StatusIrrigacao;
+import com.irrigacao.modelo.StatusIrrigacao;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 

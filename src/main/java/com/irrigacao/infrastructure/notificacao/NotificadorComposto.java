@@ -1,7 +1,7 @@
 package com.irrigacao.infrastructure.notificacao;
 
 import com.irrigacao.application.interfaces.NotificadorDeAlerta;
-import com.irrigacao.domain.modelo.Alerta;
+import com.irrigacao.modelo.Alerta;
 
 import java.util.List;
 

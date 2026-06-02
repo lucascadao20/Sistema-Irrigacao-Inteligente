@@ -1,7 +1,7 @@
 package com.irrigacao.infrastructure.persistencia;
 
 import com.irrigacao.application.interfaces.RepositorioDeCultura;
-import com.irrigacao.domain.modelo.Cultura;
+import com.irrigacao.modelo.Cultura;
 
 import java.util.HashMap;
 import java.util.Map;

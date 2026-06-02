@@ -1,6 +1,6 @@
 package com.irrigacao.application.interfaces;
 
-import com.irrigacao.domain.modelo.Cultura;
+import com.irrigacao.modelo.Cultura;
 import java.util.Map;
 import java.util.Optional;
 

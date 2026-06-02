@@ -2,9 +2,9 @@ package com.irrigacao.infrastructure.console;
 
 import com.irrigacao.application.servico.ServicoDeCicloIrrigacao;
 import com.irrigacao.application.servico.GerenciadorDeSensores;
-import com.irrigacao.domain.modelo.Cultura;
-import com.irrigacao.domain.modelo.DadosClimaticos;
-import com.irrigacao.domain.modelo.Irrigacao;
+import com.irrigacao.modelo.Cultura;
+import com.irrigacao.modelo.DadosClimaticos;
+import com.irrigacao.modelo.Irrigacao;
 import com.irrigacao.infrastructure.config.ConfiguracaoApp;
 import com.irrigacao.infrastructure.simulador.SimuladorSensores;
 

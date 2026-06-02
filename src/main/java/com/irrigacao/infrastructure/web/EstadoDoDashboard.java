@@ -1,8 +1,8 @@
 package com.irrigacao.infrastructure.web;
 
-import com.irrigacao.domain.modelo.Alerta;
-import com.irrigacao.domain.modelo.DadosClimaticos;
-import com.irrigacao.domain.modelo.Irrigacao;
+import com.irrigacao.modelo.Alerta;
+import com.irrigacao.modelo.DadosClimaticos;
+import com.irrigacao.modelo.Irrigacao;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

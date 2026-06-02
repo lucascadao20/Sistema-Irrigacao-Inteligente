@@ -1,6 +1,6 @@
-package com.irrigacao.domain.modelo;
+package com.irrigacao.modelo;
 
-import com.irrigacao.domain.enums.NivelAlerta;
+import com.irrigacao.modelo.NivelAlerta;
 import java.time.LocalDateTime;
 
 public class Alerta {
