@@ -1,6 +1,6 @@
-package com.irrigacao.infrastructure.simulador;
+package com.irrigacao.dados;
 
-import com.irrigacao.application.servico.GerenciadorDeSensores;
+import com.irrigacao.dados.GerenciadorDeSensores;
 import com.irrigacao.modelo.TipoSensor;
 import com.irrigacao.modelo.DadosClimaticos;
 import com.irrigacao.modelo.Sensor;

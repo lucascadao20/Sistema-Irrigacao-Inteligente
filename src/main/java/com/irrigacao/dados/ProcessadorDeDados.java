@@ -1,4 +1,4 @@
-package com.irrigacao.application.servico;
+package com.irrigacao.dados;
 
 import com.irrigacao.modelo.TipoSensor;
 import com.irrigacao.modelo.LeituraSensor;

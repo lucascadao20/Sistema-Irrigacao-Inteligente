@@ -1,4 +1,4 @@
-package com.irrigacao.infrastructure.persistencia;
+package com.irrigacao.dados;
 
 import com.irrigacao.modelo.Cultura;
 import org.junit.jupiter.api.Test;

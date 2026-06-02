@@ -1,7 +1,7 @@
 package com.irrigacao.application.servico;
 
 import com.irrigacao.application.fabrica.FabricaDeEstrategia;
-import com.irrigacao.application.interfaces.NotificadorDeAlerta;
+import com.irrigacao.dados.NotificadorDeAlerta;
 import com.irrigacao.modelo.NivelAlerta;
 import com.irrigacao.modelo.StatusIrrigacao;
 import com.irrigacao.modelo.Alerta;

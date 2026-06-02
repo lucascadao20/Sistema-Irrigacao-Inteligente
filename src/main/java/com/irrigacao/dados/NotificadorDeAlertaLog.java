@@ -1,6 +1,6 @@
-package com.irrigacao.infrastructure.notificacao;
+package com.irrigacao.dados;
 
-import com.irrigacao.application.interfaces.NotificadorDeAlerta;
+import com.irrigacao.dados.NotificadorDeAlerta;
 import com.irrigacao.modelo.Alerta;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

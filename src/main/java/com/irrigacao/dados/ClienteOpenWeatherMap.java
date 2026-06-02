@@ -1,4 +1,4 @@
-package com.irrigacao.infrastructure.clima;
+package com.irrigacao.dados;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;

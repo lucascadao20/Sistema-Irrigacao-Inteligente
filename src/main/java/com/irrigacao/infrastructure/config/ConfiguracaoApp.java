@@ -1,20 +1,20 @@
 package com.irrigacao.infrastructure.config;
 
 import com.irrigacao.application.fabrica.FabricaDeEstrategia;
-import com.irrigacao.application.interfaces.ServicoDeClima;
-import com.irrigacao.application.interfaces.RepositorioDeCultura;
-import com.irrigacao.application.interfaces.NotificadorDeAlerta;
+import com.irrigacao.dados.ServicoDeClima;
+import com.irrigacao.dados.RepositorioDeCultura;
+import com.irrigacao.dados.NotificadorDeAlerta;
 import com.irrigacao.application.servico.ServicoDeCicloIrrigacao;
-import com.irrigacao.application.servico.GerenciadorDeSensores;
+import com.irrigacao.dados.GerenciadorDeSensores;
 import com.irrigacao.application.servico.MotorDeRegras;
-import com.irrigacao.application.servico.ProcessadorDeDados;
-import com.irrigacao.infrastructure.clima.ClienteOpenWeatherMap;
-import com.irrigacao.infrastructure.clima.ServicoDeClimaOpenWeatherMap;
-import com.irrigacao.infrastructure.notificacao.NotificadorComposto;
-import com.irrigacao.infrastructure.notificacao.NotificadorDeAlertaConsole;
-import com.irrigacao.infrastructure.notificacao.NotificadorDeAlertaLog;
-import com.irrigacao.infrastructure.persistencia.RepositorioDeCulturaEmMemoria;
-import com.irrigacao.infrastructure.simulador.SimuladorSensores;
+import com.irrigacao.dados.ProcessadorDeDados;
+import com.irrigacao.dados.ClienteOpenWeatherMap;
+import com.irrigacao.dados.ServicoDeClimaOpenWeatherMap;
+import com.irrigacao.dados.NotificadorComposto;
+import com.irrigacao.dados.NotificadorDeAlertaConsole;
+import com.irrigacao.dados.NotificadorDeAlertaLog;
+import com.irrigacao.dados.RepositorioDeCulturaEmMemoria;
+import com.irrigacao.dados.SimuladorSensores;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

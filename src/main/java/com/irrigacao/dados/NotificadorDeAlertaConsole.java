@@ -1,6 +1,6 @@
-package com.irrigacao.infrastructure.notificacao;
+package com.irrigacao.dados;
 
-import com.irrigacao.application.interfaces.NotificadorDeAlerta;
+import com.irrigacao.dados.NotificadorDeAlerta;
 import com.irrigacao.modelo.NivelAlerta;
 import com.irrigacao.modelo.Alerta;
 

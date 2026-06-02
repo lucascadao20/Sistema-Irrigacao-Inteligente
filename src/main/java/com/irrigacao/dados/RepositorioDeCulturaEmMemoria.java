@@ -1,6 +1,6 @@
-package com.irrigacao.infrastructure.persistencia;
+package com.irrigacao.dados;
 
-import com.irrigacao.application.interfaces.RepositorioDeCultura;
+import com.irrigacao.dados.RepositorioDeCultura;
 import com.irrigacao.modelo.Cultura;
 
 import java.util.HashMap;

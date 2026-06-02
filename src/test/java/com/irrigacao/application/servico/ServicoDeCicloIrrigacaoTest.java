@@ -1,9 +1,11 @@
 package com.irrigacao.application.servico;
 
 import com.irrigacao.application.fabrica.FabricaDeEstrategia;
-import com.irrigacao.application.interfaces.ServicoDeClima;
-import com.irrigacao.application.interfaces.RepositorioDeCultura;
-import com.irrigacao.application.interfaces.NotificadorDeAlerta;
+import com.irrigacao.dados.ServicoDeClima;
+import com.irrigacao.dados.RepositorioDeCultura;
+import com.irrigacao.dados.NotificadorDeAlerta;
+import com.irrigacao.dados.GerenciadorDeSensores;
+import com.irrigacao.dados.ProcessadorDeDados;
 import com.irrigacao.modelo.StatusIrrigacao;
 import com.irrigacao.modelo.Cultura;
 import com.irrigacao.modelo.DadosClimaticos;
