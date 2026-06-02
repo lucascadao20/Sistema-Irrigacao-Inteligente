@@ -13,11 +13,11 @@ public class FabricaDeEstrategia {
         if (umidadeSolo < cultura.getUmidadeMinima() * 0.7) {
             return new EstrategiaModoEmergencial();
         }
-        if (clima.isPrevisaoChuva() || clima.getUmidadeAr() > 80) {
-            return new EstrategiaModoUmido();
-        }
         if (umidadeSolo < cultura.getUmidadeMinima()) {
             return new EstrategiaModoSeco();
+        }
+        if (clima.isPrevisaoChuva() || clima.getUmidadeAr() > 80) {
+            return new EstrategiaModoUmido();
         }
         return null;
     }

@@ -36,7 +36,7 @@ class FabricaDeEstrategiaTest {
 
     @Test
     void deveRetornarUmidoQuandoPrevisaoChuva() {
-        EstrategiaDeIrrigacao estrategia = fabrica.criar(25.0, climaChuvoso(), milho);
+        EstrategiaDeIrrigacao estrategia = fabrica.criar(40.0, climaChuvoso(), milho);
         assertInstanceOf(EstrategiaModoUmido.class, estrategia);
     }
 
@@ -46,13 +46,19 @@ class FabricaDeEstrategiaTest {
                 .temperatura(22.0).umidadeAr(85.0).velocidadeVento(2.0)
                 .descricaoClima("nublado").previsaoChuva(false).volumeChuva(0).cidade("SP")
                 .build();
-        EstrategiaDeIrrigacao estrategia = fabrica.criar(25.0, climaUmido, milho);
+        EstrategiaDeIrrigacao estrategia = fabrica.criar(40.0, climaUmido, milho);
         assertInstanceOf(EstrategiaModoUmido.class, estrategia);
     }
 
     @Test
     void deveRetornarSecoQuandoAbaixoDoMinimo() {
         EstrategiaDeIrrigacao estrategia = fabrica.criar(25.0, climaSeco(), milho);
+        assertInstanceOf(EstrategiaModoSeco.class, estrategia);
+    }
+
+    @Test
+    void devePriorizarSecoSobreUmidoQuandoSoloAbaixoDoMinimo() {
+        EstrategiaDeIrrigacao estrategia = fabrica.criar(25.0, climaChuvoso(), milho);
         assertInstanceOf(EstrategiaModoSeco.class, estrategia);
     }
 

@@ -69,7 +69,7 @@ public class ServidorWeb {
 
         ExecutorDeSimulacao executor = new ExecutorDeSimulacao(
                 cicloService, simulador, servicoDeClima, state, cidade, pais);
-        executor.iniciar(5);
+        executor.iniciar(30);
 
         JsonMapper gsonMapper = new JsonMapper() {
             private final Gson gson = new Gson();
