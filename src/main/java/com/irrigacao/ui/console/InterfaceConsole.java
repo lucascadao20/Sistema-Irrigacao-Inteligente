@@ -36,9 +36,9 @@ public class InterfaceConsole {
 
         ServicoDeCicloIrrigacao cicloService = config.criarSistema(agricultor);
 
-        GerenciadorDeSensores gerenciador = new GerenciadorDeSensores();
-        SimuladorSensores simulador = new SimuladorSensores(gerenciador);
-        simulador.inicializarSensores();
+        // Os sensores reais ja foram inicializados dentro de criarSistema(); aqui o simulador
+        // serve apenas para gerar as leituras de umidade que alimentam cada ciclo.
+        SimuladorSensores simulador = new SimuladorSensores(new GerenciadorDeSensores());
 
         System.out.printf("%n[SISTEMA] Monitorando cultura: %s%n", cultura.toUpperCase());
         System.out.printf("[SISTEMA] Intervalo: %d segundos%n", intervalo);

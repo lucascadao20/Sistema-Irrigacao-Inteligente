@@ -82,20 +82,4 @@ public class SimuladorSensores {
 
         return Math.round(leitura * 10.0) / 10.0;
     }
-
-    public double simularLeituraUmidadeSolo() {
-        return 15 + random.nextDouble() * 60;
-    }
-
-    public double simularLeituraCritica() {
-        return 15 + random.nextDouble() * 10;
-    }
-
-    public double simularLeituraAdequada() {
-        return 50 + random.nextDouble() * 20;
-    }
-
-    public double gerarLeituraInvalida() {
-        return -10 + random.nextDouble() * -50;
-    }
 }

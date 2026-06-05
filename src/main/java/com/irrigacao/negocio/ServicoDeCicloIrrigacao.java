@@ -24,6 +24,7 @@ public class ServicoDeCicloIrrigacao {
     private final GerenciadorDeSensores gerenciadorDeSensores;
     private final String cidade;
     private final String pais;
+    private DadosClimaticos ultimoClima;
 
     public ServicoDeCicloIrrigacao(ServicoDeClima servicoDeClima, RepositorioDeCultura repositorioDeCultura,
                                   MotorDeRegras motorDeRegras, ProcessadorDeDados processadorDeDados,
@@ -53,6 +54,7 @@ public class ServicoDeCicloIrrigacao {
         }
 
         DadosClimaticos clima = servicoDeClima.obterDados(cidade, pais);
+        this.ultimoClima = clima;
         logger.info("Dados climaticos: {}", clima);
 
         Irrigacao resultado = motorDeRegras.avaliarEExecutar(umidadeSolo, clima, cultura);
@@ -67,6 +69,11 @@ public class ServicoDeCicloIrrigacao {
 
     public MotorDeRegras getMotorDeRegras() {
         return motorDeRegras;
+    }
+
+    /** Retorna o clima usado no ultimo ciclo executado (evita nova chamada a API). */
+    public DadosClimaticos getUltimoClima() {
+        return ultimoClima;
     }
 
     public String getCidade() { return cidade; }

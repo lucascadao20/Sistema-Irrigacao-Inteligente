@@ -67,8 +67,7 @@ public class ServidorWeb {
         ServicoDeCicloIrrigacao cicloService = new ServicoDeCicloIrrigacao(
                 servicoDeClima, repositorioDeCultura, motor, processador, gerenciador, cidade, pais);
 
-        ExecutorDeSimulacao executor = new ExecutorDeSimulacao(
-                cicloService, simulador, servicoDeClima, state, cidade, pais);
+        ExecutorDeSimulacao executor = new ExecutorDeSimulacao(cicloService, simulador, state);
         executor.iniciar(30);
 
         JsonMapper gsonMapper = new JsonMapper() {
@@ -117,6 +116,7 @@ public class ServidorWeb {
             String nova = body.get("cultura");
             if (nova != null && repositorioDeCultura.buscarPorNome(nova).isPresent()) {
                 state.setCulturaAtiva(nova.toLowerCase());
+                executor.dispararCicloImediato();
                 ctx.json(Map.of("ok", true, "cultura", state.getCulturaAtiva()));
             } else {
                 ctx.status(400).json(Map.of("ok", false, "erro", "cultura invalida"));

@@ -1,6 +1,5 @@
 package com.irrigacao.ui.web;
 
-import com.irrigacao.dados.ServicoDeClima;
 import com.irrigacao.negocio.ServicoDeCicloIrrigacao;
 import com.irrigacao.modelo.DadosClimaticos;
 import com.irrigacao.modelo.Irrigacao;
@@ -17,24 +16,17 @@ public class ExecutorDeSimulacao {
 
     private final ServicoDeCicloIrrigacao cicloService;
     private final SimuladorSensores simulador;
-    private final ServicoDeClima servicoDeClima;
     private final EstadoDoDashboard state;
-    private final String cidade;
-    private final String pais;
     private final ScheduledExecutorService executor;
 
     private double ultimoVolume = 0;
     private DadosClimaticos ultimoClima;
 
     public ExecutorDeSimulacao(ServicoDeCicloIrrigacao cicloService, SimuladorSensores simulador,
-                            ServicoDeClima servicoDeClima, EstadoDoDashboard state,
-                            String cidade, String pais) {
+                            EstadoDoDashboard state) {
         this.cicloService = cicloService;
         this.simulador = simulador;
-        this.servicoDeClima = servicoDeClima;
         this.state = state;
-        this.cidade = cidade;
-        this.pais = pais;
         this.executor = Executors.newSingleThreadScheduledExecutor(r -> {
             Thread t = new Thread(r, "executor-simulacao");
             t.setDaemon(true);
@@ -51,12 +43,17 @@ public class ExecutorDeSimulacao {
         executor.shutdownNow();
     }
 
+    /** Agenda a execucao imediata de um ciclo, sem esperar o proximo intervalo. */
+    public void dispararCicloImediato() {
+        executor.execute(this::executarCiclo);
+    }
+
     private void executarCiclo() {
         try {
             double umidade = simulador.simularLeituraProgressiva(ultimoClima, ultimoVolume);
             String cultura = state.getCulturaAtiva();
             Irrigacao resultado = cicloService.executarCiclo(cultura, umidade);
-            DadosClimaticos clima = servicoDeClima.obterDados(cidade, pais);
+            DadosClimaticos clima = cicloService.getUltimoClima();
 
             String estrategia = cicloService.getMotorDeRegras().getEstrategiaAtual() != null
                     ? cicloService.getMotorDeRegras().getEstrategiaAtual().getNome()

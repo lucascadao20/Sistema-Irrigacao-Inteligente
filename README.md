@@ -171,7 +171,7 @@ O frontend faz polling em `/api/state` a cada 3s.
 mvn test
 ```
 
-Cobertura: **45 testes unitários** cobrindo modelo, negocio e dados.
+Cobertura: **50 testes unitários** cobrindo modelo, negocio, dados e ui/web.
 
 ## Build
 

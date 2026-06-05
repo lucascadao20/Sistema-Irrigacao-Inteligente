@@ -2,6 +2,7 @@
 target/
 *.class
 *.jar
+dependency-reduced-pom.xml
 
 # Logs
 logs/
@@ -23,6 +24,6 @@ Thumbs.db
 # Configuracao com segredos
 src/main/resources/config.properties
 
-# Claude/Superpowers (workspace local)
+# Ferramentas locais (workspace)
 .claude/
 docs/superpowers/
