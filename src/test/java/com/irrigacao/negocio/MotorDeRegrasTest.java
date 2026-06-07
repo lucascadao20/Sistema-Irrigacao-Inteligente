@@ -80,4 +80,20 @@ class MotorDeRegrasTest {
 
         assertEquals(StatusIrrigacao.SUSPENSA, resultado.getStatus());
     }
+
+    @Test
+    void alertaDeveSerConsistenteComIrrigacaoQuandoSoloSecoEComChuvaLeve() {
+        // umidade 25 esta entre 0.7*30=21 e 30 -> a fabrica escolhe Modo Seco (ATIVADA).
+        // O alerta deve refletir "abaixo do minimo / irrigacao necessaria", nao "avaliando suspensao".
+        DadosClimaticos clima = DadosClimaticos.builder()
+                .temperatura(28.0).umidadeAr(50.0).velocidadeVento(2.0)
+                .descricaoClima("garoa").previsaoChuva(true).volumeChuva(2.0).cidade("SP")
+                .build();
+
+        Irrigacao resultado = motorDeRegras.avaliarEExecutar(25.0, clima, milho);
+
+        assertEquals(StatusIrrigacao.ATIVADA, resultado.getStatus());
+        assertTrue(alertasRecebidos.stream().anyMatch(a -> a.getNivel() == NivelAlerta.AVISO));
+        assertTrue(alertasRecebidos.stream().noneMatch(a -> a.getMensagem().contains("Avaliando suspensao")));
+    }
 }

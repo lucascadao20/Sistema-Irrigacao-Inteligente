@@ -59,13 +59,13 @@ public class MotorDeRegras {
             emitirAlerta(NivelAlerta.EMERGENCIA,
                     String.format("Umidade do solo CRITICA: %.0f%% (minimo: %.0f%%) para %s",
                             umidadeSolo, cultura.getUmidadeMinima(), cultura.getNome()));
-        } else if (clima.isPrevisaoChuva()) {
-            emitirAlerta(NivelAlerta.INFO,
-                    String.format("Previsao de chuva detectada (%.1f mm) - Avaliando suspensao", clima.getVolumeChuva()));
         } else if (umidadeSolo < cultura.getUmidadeMinima()) {
             emitirAlerta(NivelAlerta.AVISO,
                     String.format("Umidade abaixo do minimo: %.0f%% (minimo: %.0f%%) - Irrigacao necessaria",
                             umidadeSolo, cultura.getUmidadeMinima()));
+        } else if (clima.isPrevisaoChuva()) {
+            emitirAlerta(NivelAlerta.INFO,
+                    String.format("Previsao de chuva detectada (%.1f mm) - Avaliando suspensao", clima.getVolumeChuva()));
         }
     }
 
