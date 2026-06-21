@@ -27,3 +27,4 @@ src/main/resources/config.properties
 # Ferramentas locais (workspace)
 .claude/
 docs/superpowers/
+.superpowers/
