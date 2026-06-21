@@ -40,7 +40,8 @@ public final class GeradorLeituraProgressivo {
             umidadeSolo += 15.0 + random.nextDouble() * 15.0;
             ticksParaProximoEvento = sortearIntervaloEvento();
         }
-        double ruido = (random.nextDouble() - 0.5) * 1.0;
+        // Ruido menor que o decaimento (0.3/tick) para a tendencia ficar visivel.
+        double ruido = (random.nextDouble() - 0.5) * 0.3;
         double valor = umidadeSolo + ruido;
         return Math.max(10.0, Math.min(95.0, valor));
     }
