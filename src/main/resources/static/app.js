@@ -289,9 +289,97 @@ async function atualizar() {
     }
 }
 
+// =============== Relatórios ===============
+function aISOLocal(dataLocal) {
+    // input type=datetime-local devolve "2026-06-21T14:30" (sem segundos);
+    // o backend espera ISO_LOCAL_DATE_TIME — basta acrescentar ":00".
+    if (!dataLocal) return null;
+    return dataLocal.length === 16 ? dataLocal + ':00' : dataLocal;
+}
+
+function definirDefaultsRelatorio() {
+    const fim = new Date();
+    const inicio = new Date(fim.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const fmt = (d) => {
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
+               `T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    };
+    document.getElementById('rel-inicio').value = fmt(inicio);
+    document.getElementById('rel-fim').value = fmt(fim);
+}
+
+function popularSelectCulturas() {
+    const select = document.getElementById('rel-cultura');
+    Object.entries(culturasInfo).forEach(([id, info]) => {
+        const opt = document.createElement('option');
+        opt.value = id;
+        opt.textContent = info.nome;
+        select.appendChild(opt);
+    });
+}
+
+function formatarDataHora(iso) {
+    const d = new Date(iso);
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+async function gerarRelatorio() {
+    const cultura = document.getElementById('rel-cultura').value;
+    const inicio = aISOLocal(document.getElementById('rel-inicio').value);
+    const fim = aISOLocal(document.getElementById('rel-fim').value);
+
+    const params = new URLSearchParams();
+    if (cultura) params.set('cultura', cultura);
+    if (inicio) params.set('inicio', inicio);
+    if (fim) params.set('fim', fim);
+
+    try {
+        const res = await fetch(`/api/relatorios/consumo?${params.toString()}`);
+        if (!res.ok) {
+            const erro = await res.json().catch(() => ({ erro: 'erro HTTP ' + res.status }));
+            alert('Falha ao gerar relatório: ' + (erro.erro || res.status));
+            return;
+        }
+        const data = await res.json();
+        document.getElementById('rel-total-volume').textContent =
+            data.consumoTotal.toFixed(1);
+        document.getElementById('rel-total-qtd').textContent = data.qtdIrrigacoes;
+
+        const tbody = document.getElementById('rel-tbody');
+        if (!data.irrigacoes || data.irrigacoes.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="relatorio-vazio">
+                Nenhuma decisão registrada no período.
+            </td></tr>`;
+            return;
+        }
+        tbody.innerHTML = '';
+        data.irrigacoes.forEach((i) => {
+            const tr = document.createElement('tr');
+            tr.className = 'rel-row-' + i.status;
+            tr.innerHTML = `
+                <td>${formatarDataHora(i.decididoEm)}</td>
+                <td><span class="rel-status ${i.status}">${i.status}</span></td>
+                <td class="rel-num">${i.volumeAgua.toFixed(1)} L</td>
+                <td>${i.estrategia || '—'}</td>
+                <td class="rel-num">${i.umidadeSolo.toFixed(1)}%</td>
+                <td class="rel-motivo">${i.motivo}</td>`;
+            tbody.appendChild(tr);
+        });
+    } catch (e) {
+        console.error('Erro relatório:', e);
+        alert('Erro de rede ao gerar relatório.');
+    }
+}
+
 (async function init() {
     await carregarCulturas();
     inicializarGrafico();
     atualizar();
     setInterval(atualizar, POLLING_MS);
+
+    definirDefaultsRelatorio();
+    popularSelectCulturas();
+    document.getElementById('relatorio-form').addEventListener('submit', gerarRelatorio);
 })();

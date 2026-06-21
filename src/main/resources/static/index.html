@@ -148,6 +148,65 @@
                 </li>
             </ul>
         </section>
+
+        <section class="card relatorio-card">
+            <header class="card-head">
+                <h2>📈 Relatório de consumo</h2>
+                <span class="card-head-sub">Histórico persistido em banco</span>
+            </header>
+            <form id="relatorio-form" class="relatorio-form" onsubmit="return false;">
+                <label>
+                    Cultura
+                    <select id="rel-cultura">
+                        <option value="">Todas</option>
+                    </select>
+                </label>
+                <label>
+                    De
+                    <input type="datetime-local" id="rel-inicio">
+                </label>
+                <label>
+                    Até
+                    <input type="datetime-local" id="rel-fim">
+                </label>
+                <button type="submit" id="rel-gerar">Gerar</button>
+            </form>
+            <div class="relatorio-totais">
+                <div class="relatorio-total-card">
+                    <span class="relatorio-total-icone">💧</span>
+                    <div>
+                        <div class="relatorio-total-valor" id="rel-total-volume">—</div>
+                        <div class="relatorio-total-label">litros consumidos</div>
+                    </div>
+                </div>
+                <div class="relatorio-total-card">
+                    <span class="relatorio-total-icone">🔁</span>
+                    <div>
+                        <div class="relatorio-total-valor" id="rel-total-qtd">—</div>
+                        <div class="relatorio-total-label">decisões no período</div>
+                    </div>
+                </div>
+            </div>
+            <div class="relatorio-tabela-wrap">
+                <table class="relatorio-tabela">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Status</th>
+                            <th>Volume</th>
+                            <th>Estratégia</th>
+                            <th>Umidade</th>
+                            <th>Motivo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rel-tbody">
+                        <tr><td colspan="6" class="relatorio-vazio">
+                            Clique em "Gerar" para consultar o histórico.
+                        </td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </main>
 
     <footer>
