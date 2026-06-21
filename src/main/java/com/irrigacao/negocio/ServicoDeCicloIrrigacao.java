@@ -4,6 +4,7 @@ import com.irrigacao.dados.ServicoDeClima;
 import com.irrigacao.dados.RepositorioDeCultura;
 import com.irrigacao.dados.GerenciadorDeSensores;
 import com.irrigacao.dados.ProcessadorDeDados;
+import com.irrigacao.dados.bd.RepositorioDeIrrigacao;
 import com.irrigacao.modelo.TipoSensor;
 import com.irrigacao.modelo.Cultura;
 import com.irrigacao.modelo.DadosClimaticos;
@@ -12,6 +13,7 @@ import com.irrigacao.modelo.Sensor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 
 public class ServicoDeCicloIrrigacao {
@@ -22,18 +24,22 @@ public class ServicoDeCicloIrrigacao {
     private final MotorDeRegras motorDeRegras;
     private final ProcessadorDeDados processadorDeDados;
     private final GerenciadorDeSensores gerenciadorDeSensores;
+    private final RepositorioDeIrrigacao repositorioDeIrrigacao;
     private final String cidade;
     private final String pais;
     private DadosClimaticos ultimoClima;
 
     public ServicoDeCicloIrrigacao(ServicoDeClima servicoDeClima, RepositorioDeCultura repositorioDeCultura,
                                   MotorDeRegras motorDeRegras, ProcessadorDeDados processadorDeDados,
-                                  GerenciadorDeSensores gerenciadorDeSensores, String cidade, String pais) {
+                                  GerenciadorDeSensores gerenciadorDeSensores,
+                                  RepositorioDeIrrigacao repositorioDeIrrigacao,
+                                  String cidade, String pais) {
         this.servicoDeClima = servicoDeClima;
         this.repositorioDeCultura = repositorioDeCultura;
         this.motorDeRegras = motorDeRegras;
         this.processadorDeDados = processadorDeDados;
         this.gerenciadorDeSensores = gerenciadorDeSensores;
+        this.repositorioDeIrrigacao = repositorioDeIrrigacao;
         this.cidade = cidade;
         this.pais = pais;
     }
@@ -59,6 +65,11 @@ public class ServicoDeCicloIrrigacao {
 
         Irrigacao resultado = motorDeRegras.avaliarEExecutar(umidadeSolo, clima, cultura);
         logger.info("Resultado: {}", resultado);
+
+        String estrategiaNome = motorDeRegras.getEstrategiaAtual() != null
+                ? motorDeRegras.getEstrategiaAtual().getNome()
+                : null;
+        repositorioDeIrrigacao.salvar(resultado, umidadeSolo, estrategiaNome, LocalDateTime.now());
 
         return resultado;
     }

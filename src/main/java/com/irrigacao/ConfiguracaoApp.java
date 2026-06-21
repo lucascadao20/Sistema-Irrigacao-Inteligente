@@ -15,17 +15,26 @@ import com.irrigacao.dados.NotificadorDeAlertaConsole;
 import com.irrigacao.dados.NotificadorDeAlertaLog;
 import com.irrigacao.dados.RepositorioDeCulturaEmMemoria;
 import com.irrigacao.dados.SimuladorSensores;
+import com.irrigacao.dados.bd.ConexaoH2;
+import com.irrigacao.dados.bd.RepositorioDeIrrigacao;
+import com.irrigacao.dados.bd.RepositorioDeIrrigacaoH2;
+import com.irrigacao.dados.bd.RepositorioDeLeituraSensor;
+import com.irrigacao.dados.bd.RepositorioDeLeituraSensorH2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Paths;
 import java.util.Properties;
 
 public class ConfiguracaoApp {
     private static final Logger logger = LoggerFactory.getLogger(ConfiguracaoApp.class);
 
     private final Properties props;
+    private ConexaoH2 conexaoBd;
+    private RepositorioDeLeituraSensor repositorioLeitura;
+    private RepositorioDeIrrigacao repositorioIrrigacao;
 
     public ConfiguracaoApp() {
         this.props = carregarProperties();
@@ -54,10 +63,19 @@ public class ConfiguracaoApp {
         SimuladorSensores simulador = new SimuladorSensores(gerenciador);
         simulador.inicializarSensores();
 
+        this.conexaoBd = ConexaoH2.paraArquivo(Paths.get("data"));
+        this.repositorioLeitura = new RepositorioDeLeituraSensorH2(conexaoBd.getDataSource());
+        this.repositorioIrrigacao = new RepositorioDeIrrigacaoH2(conexaoBd.getDataSource());
+
         return new ServicoDeCicloIrrigacao(
-                servicoDeClima, repositorioDeCultura, motorDeRegras, processador, gerenciador, cidade, pais
+                servicoDeClima, repositorioDeCultura, motorDeRegras, processador, gerenciador,
+                repositorioIrrigacao, cidade, pais
         );
     }
+
+    public ConexaoH2 getConexaoBd() { return conexaoBd; }
+    public RepositorioDeLeituraSensor getRepositorioLeitura() { return repositorioLeitura; }
+    public RepositorioDeIrrigacao getRepositorioIrrigacao() { return repositorioIrrigacao; }
 
     public SimuladorSensores criarSimulador(GerenciadorDeSensores gerenciador) {
         return new SimuladorSensores(gerenciador);

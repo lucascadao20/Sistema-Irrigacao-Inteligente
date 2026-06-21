@@ -5,6 +5,8 @@ import com.irrigacao.dados.NotificadorComposto;
 import com.irrigacao.dados.ProcessadorDeDados;
 import com.irrigacao.dados.RepositorioDeCulturaEmMemoria;
 import com.irrigacao.dados.ServicoDeClima;
+import com.irrigacao.dados.bd.ConexaoH2;
+import com.irrigacao.dados.bd.RepositorioDeIrrigacaoH2;
 import com.irrigacao.dados.mqtt.EstadoUltimasLeituras;
 import com.irrigacao.modelo.DadosClimaticos;
 import com.irrigacao.modelo.Sensor;
@@ -34,7 +36,10 @@ class ExecutorDeSimulacaoTest {
                 new NotificadorComposto());
         var gerenciador = new GerenciadorDeSensores();
         var proc = new ProcessadorDeDados(gerenciador);
-        return new ServicoDeCicloIrrigacao(climaStub, repo, motor, proc, gerenciador, "SP", "BR");
+        var conexao = ConexaoH2.emMemoria();
+        var repoIrrigacao = new RepositorioDeIrrigacaoH2(conexao.getDataSource());
+        return new ServicoDeCicloIrrigacao(
+                climaStub, repo, motor, proc, gerenciador, repoIrrigacao, "SP", "BR");
     }
 
     @Test

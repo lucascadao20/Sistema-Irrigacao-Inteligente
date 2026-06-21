@@ -1,18 +1,21 @@
 package com.irrigacao.negocio;
 
-import com.irrigacao.negocio.FabricaDeEstrategia;
 import com.irrigacao.dados.ServicoDeClima;
 import com.irrigacao.dados.RepositorioDeCultura;
 import com.irrigacao.dados.NotificadorDeAlerta;
 import com.irrigacao.dados.GerenciadorDeSensores;
 import com.irrigacao.dados.ProcessadorDeDados;
+import com.irrigacao.dados.bd.ConexaoH2;
+import com.irrigacao.dados.bd.RepositorioDeIrrigacaoH2;
 import com.irrigacao.modelo.StatusIrrigacao;
 import com.irrigacao.modelo.Cultura;
 import com.irrigacao.modelo.DadosClimaticos;
 import com.irrigacao.modelo.Irrigacao;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 
@@ -21,6 +24,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class ServicoDeCicloIrrigacaoTest {
 
     private ServicoDeCicloIrrigacao cicloService;
+    private ConexaoH2 conexao;
+    private RepositorioDeIrrigacaoH2 repositorioIrrigacao;
     private final Cultura milho = new Cultura("Milho", 30, 60, 650, 1.15);
 
     @BeforeEach
@@ -47,9 +52,18 @@ class ServicoDeCicloIrrigacaoTest {
         GerenciadorDeSensores gerenciador = new GerenciadorDeSensores();
         ProcessadorDeDados processador = new ProcessadorDeDados(gerenciador);
 
+        conexao = ConexaoH2.emMemoria();
+        repositorioIrrigacao = new RepositorioDeIrrigacaoH2(conexao.getDataSource());
+
         cicloService = new ServicoDeCicloIrrigacao(
-                servicoDeClima, repositorioDeCultura, motor, processador, gerenciador, "Sao Paulo", "BR"
+                servicoDeClima, repositorioDeCultura, motor, processador, gerenciador,
+                repositorioIrrigacao, "Sao Paulo", "BR"
         );
+    }
+
+    @AfterEach
+    void tearDown() {
+        conexao.fechar();
     }
 
     @Test
@@ -80,5 +94,18 @@ class ServicoDeCicloIrrigacaoTest {
         Map<String, Cultura> culturas = cicloService.listarCulturas();
         assertEquals(1, culturas.size());
         assertTrue(culturas.containsKey("milho"));
+    }
+
+    @Test
+    void cicloExecutadoDevePersistirIrrigacaoNoBanco() {
+        LocalDateTime antes = LocalDateTime.now().minusSeconds(1);
+
+        cicloService.executarCiclo("milho", 22.0);
+        cicloService.executarCiclo("milho", 55.0);
+
+        var registros = repositorioIrrigacao.listar(
+                Optional.of("Milho"), antes, LocalDateTime.now().plusSeconds(1));
+        assertEquals(2, registros.size(),
+                "ambos os ciclos (ativada e aguardando) devem ter sido persistidos");
     }
 }

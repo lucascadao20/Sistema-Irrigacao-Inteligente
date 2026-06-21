@@ -79,6 +79,8 @@ public class ServidorWeb {
                 com.irrigacao.dados.bd.ConexaoH2.paraArquivo(java.nio.file.Paths.get("data"));
         com.irrigacao.dados.bd.RepositorioDeLeituraSensorH2 repositorioLeitura =
                 new com.irrigacao.dados.bd.RepositorioDeLeituraSensorH2(conexaoBd.getDataSource());
+        com.irrigacao.dados.bd.RepositorioDeIrrigacaoH2 repositorioIrrigacao =
+                new com.irrigacao.dados.bd.RepositorioDeIrrigacaoH2(conexaoBd.getDataSource());
 
         com.irrigacao.dados.mqtt.ColetorMqttSensores coletor = null;
         if (cfgMqtt != null) {
@@ -93,7 +95,8 @@ public class ServidorWeb {
         }
 
         ServicoDeCicloIrrigacao cicloService = new ServicoDeCicloIrrigacao(
-                servicoDeClima, repositorioDeCultura, motor, processador, gerenciador, cidade, pais);
+                servicoDeClima, repositorioDeCultura, motor, processador, gerenciador,
+                repositorioIrrigacao, cidade, pais);
 
         ExecutorDeSimulacao executor = new ExecutorDeSimulacao(cicloService, leituras, state);
         executor.iniciar(30);
