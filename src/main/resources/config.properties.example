@@ -6,3 +6,14 @@ openweathermap.base.url=https://api.openweathermap.org/data/2.5
 # Cidade padrao para consulta climatica
 cidade.padrao=Sao Paulo
 cidade.pais=BR
+
+# ====== MQTT (broker Mosquitto local) ======
+mqtt.broker.url=tcp://localhost:1883
+mqtt.client.id.app=irrigacao-app
+mqtt.client.id.simulador=irrigacao-simulador
+mqtt.intervalo.publicacao.segundos=5
+
+mqtt.topico.umidade_solo=irrigacao/sensores/SU-001/umidade_solo
+mqtt.topico.temperatura=irrigacao/sensores/ST-001/temperatura
+mqtt.topico.umidade_ar=irrigacao/sensores/SA-001/umidade_ar
+mqtt.topico.ph_solo=irrigacao/sensores/SP-001/ph_solo
