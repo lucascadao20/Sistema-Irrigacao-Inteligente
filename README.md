@@ -196,6 +196,64 @@ A `FabricaDeEstrategia` seleciona a estratégia conforme o estado:
 
 Cada estratégia calcula o volume de água considerando déficit hídrico, coeficiente de cultura e ajustes por temperatura.
 
+## Simulador de Sensores via MQTT (modo `--web`)
+
+A partir desta versão, o dashboard web consome leituras de sensores publicadas
+por um processo externo via MQTT, em vez de gerá-las internamente. Os modos
+console e `--demo` continuam usando o `SimuladorSensores` local como fallback
+offline.
+
+### Componentes
+
+- **Broker:** Mosquitto local em Docker (`docker-compose.yml`).
+- **Publicador (sensor simulado):** `com.irrigacao.simulador.PublisherMain`,
+  processo Java separado que publica leituras dos 4 sensores a cada 5 s.
+- **Assinante:** `com.irrigacao.dados.mqtt.ColetorMqttSensores`, integrado ao
+  modo `--web`, atualiza um cache lido pelo ciclo de avaliação a cada 30 s.
+
+### Pré-requisitos
+
+- Docker.
+- Maven e Java 17+.
+- Arquivo `src/main/resources/config.properties` com as chaves `mqtt.*` (ver
+  `config.properties.example`).
+
+### Como rodar (3 terminais)
+
+Terminal **1** — broker:
+
+```bash
+docker compose up -d
+```
+
+Terminal **2** — publicador (faz o papel dos sensores IoT):
+
+```bash
+mvn compile
+mvn exec:java "-Dexec.mainClass=com.irrigacao.simulador.PublisherMain"
+```
+
+Terminal **3** — dashboard:
+
+```bash
+mvn exec:java "-Dexec.mainClass=com.irrigacao.Main" "-Dexec.args=--web 7070"
+```
+
+Abrir <http://localhost:7070>.
+
+### Encerrando
+
+- Ctrl+C nos terminais 2 e 3.
+- `docker compose down` para parar o broker.
+
+### Observações
+
+- O `com.irrigacao.dados.SimuladorSensores` (Random in-process) permanece em
+  uso nos modos `console` e `--demo` — não é o mesmo componente do publicador
+  MQTT (`com.irrigacao.simulador`).
+- O broker Mosquitto roda sem autenticação e sem TLS — **uso local apenas**.
+  Não exponha a porta `1883` para fora da máquina.
+
 ## Estrutura do dashboard web
 
 ```
