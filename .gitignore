@@ -28,3 +28,6 @@ src/main/resources/config.properties
 .claude/
 docs/superpowers/
 .superpowers/
+
+# Banco de dados local
+data/
