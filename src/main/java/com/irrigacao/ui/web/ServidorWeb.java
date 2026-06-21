@@ -154,6 +154,52 @@ public class ServidorWeb {
             }
         });
 
+        app.get("/api/relatorios/consumo", ctx -> {
+            String culturaParam = ctx.queryParam("cultura");
+            String inicioParam = ctx.queryParam("inicio");
+            String fimParam = ctx.queryParam("fim");
+
+            java.time.LocalDateTime inicio;
+            java.time.LocalDateTime fim;
+            try {
+                inicio = inicioParam != null
+                        ? java.time.LocalDateTime.parse(inicioParam)
+                        : java.time.LocalDateTime.now().minusDays(7);
+                fim = fimParam != null
+                        ? java.time.LocalDateTime.parse(fimParam)
+                        : java.time.LocalDateTime.now();
+            } catch (java.time.format.DateTimeParseException e) {
+                ctx.status(400).json(Map.of("ok", false, "erro",
+                        "datas devem estar em ISO_LOCAL_DATE_TIME (ex.: 2026-06-21T00:00:00)"));
+                return;
+            }
+
+            java.util.Optional<String> filtroCultura = (culturaParam != null && !culturaParam.isBlank())
+                    ? java.util.Optional.of(resolverNomeCultura(culturaParam, repositorioDeCultura))
+                    : java.util.Optional.empty();
+
+            var consumo = repositorioIrrigacao.consumoNoPeriodo(filtroCultura, inicio, fim);
+            var lista = repositorioIrrigacao.listar(filtroCultura, inicio, fim);
+
+            Map<String, Object> resposta = new LinkedHashMap<>();
+            resposta.put("cultura", consumo.culturaNome());
+            resposta.put("inicio", inicio.format(ISO));
+            resposta.put("fim", fim.format(ISO));
+            resposta.put("consumoTotal", consumo.volumeTotal());
+            resposta.put("qtdIrrigacoes", consumo.qtdIrrigacoes());
+            resposta.put("irrigacoes", lista.stream().map(r -> {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("decididoEm", r.decididoEm().format(ISO));
+                m.put("status", r.status().name());
+                m.put("volumeAgua", r.volumeAgua());
+                m.put("estrategia", r.estrategiaNome());
+                m.put("motivo", r.motivo());
+                m.put("umidadeSolo", r.umidadeSolo());
+                return m;
+            }).toList());
+            ctx.json(resposta);
+        });
+
         final com.irrigacao.dados.mqtt.ColetorMqttSensores coletorFinal = coletor;
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             executor.parar();
@@ -166,6 +212,17 @@ public class ServidorWeb {
         logger.info("Dashboard disponivel em http://localhost:{}", porta);
         System.out.printf("%n[WEB] Dashboard disponivel em http://localhost:%d%n", porta);
         System.out.println("[WEB] Pressione Ctrl+C para encerrar.");
+    }
+
+    /**
+     * Aceita tanto o ID em lower-case (chave do repositorio, ex.: "milho") quanto
+     * o nome exibido (ex.: "Milho") e retorna sempre o nome canonico armazenado em
+     * `cultura_nome` na tabela `irrigacao`.
+     */
+    private String resolverNomeCultura(String entrada, RepositorioDeCultura repo) {
+        return repo.buscarPorNome(entrada)
+                .map(Cultura::getNome)
+                .orElse(entrada);
     }
 
     private Map<String, Object> montarSnapshot(EstadoDoDashboard state) {
