@@ -3,7 +3,7 @@ const GAUGE_CIRCUMFERENCE = 534; // 2 * π * 85
 
 let chart = null;
 let culturasInfo = {};
-let alertasIds = new Set();
+let alertasKeyAnterior = null;
 
 // =============== Relógio ===============
 function tickClock() {
@@ -231,6 +231,13 @@ function formatarHoraCurta(iso) {
 
 // =============== Alertas ===============
 function atualizarAlertas(alertas) {
+    // Polling acontece a cada 3s, mas alertas só mudam quando o ciclo roda (30s).
+    // Re-renderizar a cada poll causa um "pisca" visual sem motivo — fazemos um
+    // diff barato pelos IDs e só mexemos no DOM quando a lista realmente mudou.
+    const novaKey = alertas.map(a => a.id).join('|');
+    if (novaKey === alertasKeyAnterior) return;
+    alertasKeyAnterior = novaKey;
+
     const ul = document.getElementById('lista-alertas');
     document.getElementById('alertas-count').textContent =
         alertas.length === 0 ? 'Nenhuma' : `${alertas.length} mensagens`;
