@@ -75,9 +75,15 @@ public class ServidorWeb {
         SimuladorSensores simulador = new SimuladorSensores(gerenciador);
         simulador.inicializarSensores();
 
+        com.irrigacao.dados.bd.ConexaoH2 conexaoBd =
+                com.irrigacao.dados.bd.ConexaoH2.paraArquivo(java.nio.file.Paths.get("data"));
+        com.irrigacao.dados.bd.RepositorioDeLeituraSensorH2 repositorioLeitura =
+                new com.irrigacao.dados.bd.RepositorioDeLeituraSensorH2(conexaoBd.getDataSource());
+
         com.irrigacao.dados.mqtt.ColetorMqttSensores coletor = null;
         if (cfgMqtt != null) {
-            coletor = new com.irrigacao.dados.mqtt.ColetorMqttSensores(cfgMqtt, leituras, gerenciador);
+            coletor = new com.irrigacao.dados.mqtt.ColetorMqttSensores(
+                    cfgMqtt, leituras, gerenciador, repositorioLeitura);
             try {
                 coletor.iniciar();
             } catch (org.eclipse.paho.client.mqttv3.MqttException e) {
@@ -149,6 +155,7 @@ public class ServidorWeb {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             executor.parar();
             if (coletorFinal != null) coletorFinal.parar();
+            conexaoBd.fechar();
             app.stop();
         }));
 

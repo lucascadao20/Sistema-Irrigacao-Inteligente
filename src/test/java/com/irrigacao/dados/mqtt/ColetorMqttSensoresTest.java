@@ -1,8 +1,11 @@
 package com.irrigacao.dados.mqtt;
 
 import com.irrigacao.dados.GerenciadorDeSensores;
+import com.irrigacao.dados.bd.ConexaoH2;
+import com.irrigacao.dados.bd.RepositorioDeLeituraSensorH2;
 import com.irrigacao.modelo.Sensor;
 import com.irrigacao.modelo.TipoSensor;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -12,8 +15,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ColetorMqttSensoresTest {
 
+    private ConexaoH2 conexao;
     private EstadoUltimasLeituras estado;
     private GerenciadorDeSensores gerenciador;
+    private RepositorioDeLeituraSensorH2 repositorio;
     private ColetorMqttSensores coletor;
 
     @BeforeEach
@@ -26,6 +31,9 @@ class ColetorMqttSensoresTest {
         p.setProperty("mqtt.topico.ph_solo",      "t/ph_solo");
         ConfiguracaoMqtt cfg = ConfiguracaoMqtt.carregar(p);
 
+        conexao = ConexaoH2.emMemoria();
+        repositorio = new RepositorioDeLeituraSensorH2(conexao.getDataSource());
+
         estado = new EstadoUltimasLeituras();
         gerenciador = new GerenciadorDeSensores();
         gerenciador.registrarSensor(new Sensor("SU-001", TipoSensor.UMIDADE_SOLO, "Talhao A"));
@@ -33,7 +41,12 @@ class ColetorMqttSensoresTest {
         gerenciador.registrarSensor(new Sensor("SA-001", TipoSensor.UMIDADE_AR,   "Talhao A"));
         gerenciador.registrarSensor(new Sensor("SP-001", TipoSensor.PH_SOLO,      "Talhao A"));
 
-        coletor = new ColetorMqttSensores(cfg, estado, gerenciador);
+        coletor = new ColetorMqttSensores(cfg, estado, gerenciador, repositorio);
+    }
+
+    @AfterEach
+    void teardown() {
+        conexao.fechar();
     }
 
     @Test
@@ -46,6 +59,23 @@ class ColetorMqttSensoresTest {
         assertEquals(42.7,
                 estado.getUltima(TipoSensor.UMIDADE_SOLO).orElseThrow().getValor(),
                 0.0001);
+    }
+
+    @Test
+    void payloadValidoTambemPersisteNoBanco() {
+        String payload = "{\"sensorId\":\"SU-001\",\"tipo\":\"UMIDADE_SOLO\","
+                + "\"valor\":42.7,\"unidade\":\"%\",\"timestamp\":\"2026-06-21T10:00:00\"}";
+
+        assertEquals(0, repositorio.contar());
+        coletor.processarMensagem("t/umidade_solo", payload);
+        assertEquals(1, repositorio.contar());
+    }
+
+    @Test
+    void payloadInvalidoNaoPersisteNoBanco() {
+        coletor.processarMensagem("t/umidade_solo", "isto-nao-e-json");
+        coletor.processarMensagem("t/umidade_solo", "{\"sensorId\":\"SU-001\"}"); // sem valor
+        assertEquals(0, repositorio.contar());
     }
 
     @Test

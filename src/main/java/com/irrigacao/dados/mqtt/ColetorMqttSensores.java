@@ -4,6 +4,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.irrigacao.dados.GerenciadorDeSensores;
+import com.irrigacao.dados.bd.RepositorioDeLeituraSensor;
+import com.irrigacao.modelo.LeituraSensor;
 import com.irrigacao.modelo.Sensor;
 import com.irrigacao.modelo.TipoSensor;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -25,16 +27,19 @@ public class ColetorMqttSensores {
     private final ConfiguracaoMqtt cfg;
     private final EstadoUltimasLeituras estado;
     private final GerenciadorDeSensores gerenciador;
+    private final RepositorioDeLeituraSensor repositorioLeitura;
     private final Map<String, TipoSensor> tipoPorTopico;
 
     private MqttClient client;
 
     public ColetorMqttSensores(ConfiguracaoMqtt cfg,
                                 EstadoUltimasLeituras estado,
-                                GerenciadorDeSensores gerenciador) {
+                                GerenciadorDeSensores gerenciador,
+                                RepositorioDeLeituraSensor repositorioLeitura) {
         this.cfg = cfg;
         this.estado = estado;
         this.gerenciador = gerenciador;
+        this.repositorioLeitura = repositorioLeitura;
         this.tipoPorTopico = new HashMap<>();
         cfg.topicosPorTipo().forEach((tipo, topico) -> tipoPorTopico.put(topico, tipo));
     }
@@ -103,7 +108,9 @@ public class ColetorMqttSensores {
         // ciclo de irrigação o que importa é "quão recente é a leitura sob o ponto
         // de vista do app". O timestamp do publicador fica disponível no log do
         // broker para diagnóstico, se necessário.
-        estado.registrar(sensor, valorOpt.get(), LocalDateTime.now());
+        LocalDateTime agora = LocalDateTime.now();
+        estado.registrar(sensor, valorOpt.get(), agora);
+        repositorioLeitura.salvar(new LeituraSensor(sensor, valorOpt.get(), agora));
     }
 
     private static Optional<Double> extrairValor(String payload) {
