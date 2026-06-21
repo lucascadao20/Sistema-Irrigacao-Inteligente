@@ -49,6 +49,11 @@ public class ServidorWeb {
 
         EstadoDoDashboard state = new EstadoDoDashboard();
 
+        com.irrigacao.dados.mqtt.ConfiguracaoMqtt cfgMqtt =
+                com.irrigacao.dados.mqtt.ConfiguracaoMqtt.carregar(props);
+        com.irrigacao.dados.mqtt.EstadoUltimasLeituras leituras =
+                new com.irrigacao.dados.mqtt.EstadoUltimasLeituras();
+
         ClienteOpenWeatherMap client = new ClienteOpenWeatherMap(apiKey, baseUrl);
         ServicoDeClima servicoDeClima = new ServicoDeClimaOpenWeatherMap(client);
         RepositorioDeCultura repositorioDeCultura = new RepositorioDeCulturaEmMemoria();
@@ -64,10 +69,19 @@ public class ServidorWeb {
         SimuladorSensores simulador = new SimuladorSensores(gerenciador);
         simulador.inicializarSensores();
 
+        com.irrigacao.dados.mqtt.ColetorMqttSensores coletor =
+                new com.irrigacao.dados.mqtt.ColetorMqttSensores(cfgMqtt, leituras, gerenciador);
+        try {
+            coletor.iniciar();
+        } catch (org.eclipse.paho.client.mqttv3.MqttException e) {
+            logger.warn("Nao foi possivel conectar ao broker MQTT em {}: {}. " +
+                    "O ciclo ira aguardar leituras.", cfgMqtt.brokerUrl(), e.getMessage());
+        }
+
         ServicoDeCicloIrrigacao cicloService = new ServicoDeCicloIrrigacao(
                 servicoDeClima, repositorioDeCultura, motor, processador, gerenciador, cidade, pais);
 
-        ExecutorDeSimulacao executor = new ExecutorDeSimulacao(cicloService, simulador, state);
+        ExecutorDeSimulacao executor = new ExecutorDeSimulacao(cicloService, leituras, state);
         executor.iniciar(30);
 
         JsonMapper gsonMapper = new JsonMapper() {
@@ -125,6 +139,7 @@ public class ServidorWeb {
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             executor.parar();
+            coletor.parar();
             app.stop();
         }));
 

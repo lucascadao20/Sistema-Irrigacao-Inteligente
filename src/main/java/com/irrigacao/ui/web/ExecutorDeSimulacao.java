@@ -1,12 +1,18 @@
 package com.irrigacao.ui.web;
 
-import com.irrigacao.negocio.ServicoDeCicloIrrigacao;
+import com.irrigacao.dados.mqtt.EstadoUltimasLeituras;
+import com.irrigacao.modelo.Alerta;
 import com.irrigacao.modelo.DadosClimaticos;
 import com.irrigacao.modelo.Irrigacao;
-import com.irrigacao.dados.SimuladorSensores;
+import com.irrigacao.modelo.LeituraSensor;
+import com.irrigacao.modelo.NivelAlerta;
+import com.irrigacao.modelo.TipoSensor;
+import com.irrigacao.negocio.ServicoDeCicloIrrigacao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -15,17 +21,17 @@ public class ExecutorDeSimulacao {
     private static final Logger logger = LoggerFactory.getLogger(ExecutorDeSimulacao.class);
 
     private final ServicoDeCicloIrrigacao cicloService;
-    private final SimuladorSensores simulador;
+    private final EstadoUltimasLeituras leituras;
     private final EstadoDoDashboard state;
     private final ScheduledExecutorService executor;
 
-    private double ultimoVolume = 0;
-    private DadosClimaticos ultimoClima;
+    private boolean avisadoAusencia = false;
 
-    public ExecutorDeSimulacao(ServicoDeCicloIrrigacao cicloService, SimuladorSensores simulador,
-                            EstadoDoDashboard state) {
+    public ExecutorDeSimulacao(ServicoDeCicloIrrigacao cicloService,
+                                EstadoUltimasLeituras leituras,
+                                EstadoDoDashboard state) {
         this.cicloService = cicloService;
-        this.simulador = simulador;
+        this.leituras = leituras;
         this.state = state;
         this.executor = Executors.newSingleThreadScheduledExecutor(r -> {
             Thread t = new Thread(r, "executor-simulacao");
@@ -36,21 +42,33 @@ public class ExecutorDeSimulacao {
 
     public void iniciar(int intervaloSegundos) {
         executor.scheduleAtFixedRate(this::executarCiclo, 0, intervaloSegundos, TimeUnit.SECONDS);
-        logger.info("Simulacao iniciada com intervalo de {}s", intervaloSegundos);
+        logger.info("Ciclo iniciado com intervalo de {}s (fonte: MQTT)", intervaloSegundos);
     }
 
     public void parar() {
         executor.shutdownNow();
     }
 
-    /** Agenda a execucao imediata de um ciclo, sem esperar o proximo intervalo. */
     public void dispararCicloImediato() {
         executor.execute(this::executarCiclo);
     }
 
-    private void executarCiclo() {
+    /** Package-private para permitir invocação síncrona em testes. */
+    void executarCiclo() {
         try {
-            double umidade = simulador.simularLeituraProgressiva(ultimoClima, ultimoVolume);
+            Optional<LeituraSensor> ultima = leituras.getUltima(TipoSensor.UMIDADE_SOLO);
+            if (ultima.isEmpty()) {
+                if (!avisadoAusencia) {
+                    state.registrarAlerta(new Alerta(novoId(), NivelAlerta.INFO,
+                            "Aguardando primeira leitura MQTT do sensor de umidade do solo"));
+                    avisadoAusencia = true;
+                }
+                logger.warn("Nenhuma leitura MQTT disponivel ainda; ciclo adiado");
+                return;
+            }
+            avisadoAusencia = false;
+
+            double umidade = ultima.get().getValor();
             String cultura = state.getCulturaAtiva();
             Irrigacao resultado = cicloService.executarCiclo(cultura, umidade);
             DadosClimaticos clima = cicloService.getUltimoClima();
@@ -60,10 +78,12 @@ public class ExecutorDeSimulacao {
                     : "Aguardando";
 
             state.registrarCiclo(umidade, clima, resultado, estrategia);
-            ultimoVolume = resultado.getVolumeAgua();
-            ultimoClima = clima;
         } catch (Exception e) {
-            logger.error("Erro no ciclo de simulacao", e);
+            logger.error("Erro no ciclo de irrigacao", e);
         }
+    }
+
+    private static String novoId() {
+        return UUID.randomUUID().toString().substring(0, 8);
     }
 }
