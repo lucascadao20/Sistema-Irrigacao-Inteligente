@@ -49,10 +49,16 @@ public class ServidorWeb {
 
         EstadoDoDashboard state = new EstadoDoDashboard();
 
-        com.irrigacao.dados.mqtt.ConfiguracaoMqtt cfgMqtt =
-                com.irrigacao.dados.mqtt.ConfiguracaoMqtt.carregar(props);
         com.irrigacao.dados.mqtt.EstadoUltimasLeituras leituras =
                 new com.irrigacao.dados.mqtt.EstadoUltimasLeituras();
+
+        com.irrigacao.dados.mqtt.ConfiguracaoMqtt cfgMqtt = null;
+        try {
+            cfgMqtt = com.irrigacao.dados.mqtt.ConfiguracaoMqtt.carregar(props);
+        } catch (IllegalStateException e) {
+            logger.warn("Configuracao MQTT incompleta ({}). Veja config.properties.example. " +
+                    "O dashboard rodara sem MQTT e o ciclo aguardara leituras.", e.getMessage());
+        }
 
         ClienteOpenWeatherMap client = new ClienteOpenWeatherMap(apiKey, baseUrl);
         ServicoDeClima servicoDeClima = new ServicoDeClimaOpenWeatherMap(client);
@@ -69,13 +75,15 @@ public class ServidorWeb {
         SimuladorSensores simulador = new SimuladorSensores(gerenciador);
         simulador.inicializarSensores();
 
-        com.irrigacao.dados.mqtt.ColetorMqttSensores coletor =
-                new com.irrigacao.dados.mqtt.ColetorMqttSensores(cfgMqtt, leituras, gerenciador);
-        try {
-            coletor.iniciar();
-        } catch (org.eclipse.paho.client.mqttv3.MqttException e) {
-            logger.warn("Nao foi possivel conectar ao broker MQTT em {}: {}. " +
-                    "O ciclo ira aguardar leituras.", cfgMqtt.brokerUrl(), e.getMessage());
+        com.irrigacao.dados.mqtt.ColetorMqttSensores coletor = null;
+        if (cfgMqtt != null) {
+            coletor = new com.irrigacao.dados.mqtt.ColetorMqttSensores(cfgMqtt, leituras, gerenciador);
+            try {
+                coletor.iniciar();
+            } catch (org.eclipse.paho.client.mqttv3.MqttException e) {
+                logger.warn("Nao foi possivel conectar ao broker MQTT em {}: {}. " +
+                        "O ciclo ira aguardar leituras.", cfgMqtt.brokerUrl(), e.getMessage());
+            }
         }
 
         ServicoDeCicloIrrigacao cicloService = new ServicoDeCicloIrrigacao(
@@ -137,9 +145,10 @@ public class ServidorWeb {
             }
         });
 
+        final com.irrigacao.dados.mqtt.ColetorMqttSensores coletorFinal = coletor;
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             executor.parar();
-            coletor.parar();
+            if (coletorFinal != null) coletorFinal.parar();
             app.stop();
         }));
 

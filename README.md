@@ -253,6 +253,9 @@ Abrir <http://localhost:7070>.
   MQTT (`com.irrigacao.simulador`).
 - O broker Mosquitto roda sem autenticação e sem TLS — **uso local apenas**.
   Não exponha a porta `1883` para fora da máquina.
+- Se o broker subir **depois** do dashboard, reinicie o dashboard para
+  reconectar — o Paho só reconecta automaticamente após uma conexão inicial
+  bem-sucedida (`setAutomaticReconnect` não cobre falhas na conexão inicial).
 
 ## Estrutura do dashboard web
 

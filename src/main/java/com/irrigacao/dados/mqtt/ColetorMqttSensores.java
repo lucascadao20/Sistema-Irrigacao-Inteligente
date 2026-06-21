@@ -99,6 +99,10 @@ public class ColetorMqttSensores {
             return;
         }
 
+        // Usamos o instante de recepção em vez do timestamp do payload — para o
+        // ciclo de irrigação o que importa é "quão recente é a leitura sob o ponto
+        // de vista do app". O timestamp do publicador fica disponível no log do
+        // broker para diagnóstico, se necessário.
         estado.registrar(sensor, valorOpt.get(), LocalDateTime.now());
     }
 

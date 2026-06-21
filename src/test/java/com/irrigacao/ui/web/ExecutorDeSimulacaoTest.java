@@ -63,4 +63,40 @@ class ExecutorDeSimulacaoTest {
         assertNotNull(state.getUltimaIrrigacao(),
                 "ciclo deveria ter rodado e registrado irrigacao");
     }
+
+    @Test
+    void multiplosCiclosSemLeituraEmitemApenasUmAlerta() {
+        EstadoDoDashboard state = new EstadoDoDashboard();
+        EstadoUltimasLeituras leituras = new EstadoUltimasLeituras();
+        ExecutorDeSimulacao exec = new ExecutorDeSimulacao(cicloPadrao(), leituras, state);
+
+        exec.executarCiclo();
+        exec.executarCiclo();
+        exec.executarCiclo();
+
+        assertEquals(1, state.getAlertas().size(),
+                "alerta de ausencia deve ser emitido apenas uma vez consecutiva");
+    }
+
+    @Test
+    void flagDeAusenciaReiniciaQuandoLeituraChega() {
+        EstadoDoDashboard state = new EstadoDoDashboard();
+        EstadoUltimasLeituras leituras = new EstadoUltimasLeituras();
+        Sensor sensorSolo = new Sensor("SU-001", TipoSensor.UMIDADE_SOLO, "Talhao A");
+        ExecutorDeSimulacao exec = new ExecutorDeSimulacao(cicloPadrao(), leituras, state);
+
+        exec.executarCiclo(); // sem leitura → alerta 1
+        leituras.registrar(sensorSolo, 40.0, LocalDateTime.now());
+        exec.executarCiclo(); // com leitura → roda ciclo, reseta flag
+
+        // Simula broker caiu e cache foi zerado — novo executor (nova instância, flag resetada)
+        EstadoUltimasLeituras leiturasVazias = new EstadoUltimasLeituras();
+        ExecutorDeSimulacao exec2 = new ExecutorDeSimulacao(cicloPadrao(), leiturasVazias, state);
+        exec2.executarCiclo(); // sem leitura de novo → alerta 2
+
+        long ausencias = state.getAlertas().stream()
+                .filter(a -> a.getMensagem().contains("Aguardando primeira leitura"))
+                .count();
+        assertEquals(2, ausencias, "cada periodo de ausencia deve emitir 1 alerta");
+    }
 }
