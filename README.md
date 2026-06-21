@@ -162,6 +162,7 @@ java -jar target/sistema-irrigacao-inteligente-1.0.0.jar --demo
 | GET | `/api/state` | Snapshot completo (clima, irrigação, histórico, alertas) |
 | GET | `/api/culturas` | Lista de culturas com parâmetros agronômicos |
 | POST | `/api/cultura` | Troca a cultura ativa. Body: `{ "cultura": "soja" }` |
+| GET | `/api/relatorios/consumo` | Relatório de consumo de água persistido no banco. Query params: `cultura` (opcional), `inicio` e `fim` em `ISO_LOCAL_DATE_TIME`. Defaults: últimos 7 dias, todas as culturas. |
 
 O frontend faz polling em `/api/state` a cada 3s.
 
@@ -256,6 +257,51 @@ Abrir <http://localhost:7070>.
 - Se o broker subir **depois** do dashboard, reinicie o dashboard para
   reconectar — o Paho só reconecta automaticamente após uma conexão inicial
   bem-sucedida (`setAutomaticReconnect` não cobre falhas na conexão inicial).
+
+## Persistência em banco (H2 embarcado)
+
+A partir desta versão, todas as **leituras dos sensores** e **decisões de
+irrigação** são persistidas em um banco H2 embarcado, em modo arquivo.
+
+### Onde fica o banco
+
+Arquivo `data/irrigacao.mv.db` na raiz do projeto. Esse caminho está em
+`.gitignore` — o banco é estritamente local, não vai para o repositório.
+
+### O que é persistido
+
+| Tabela | Quando é gravada | Conteúdo |
+|---|---|---|
+| `leitura_sensor` | A cada mensagem MQTT recebida (modo `--web`) | sensor_id, tipo, valor, valida, recebido_em |
+| `irrigacao` | Ao final de cada ciclo de avaliação (todos os modos) | id, cultura_nome, status, volume_agua, motivo, estrategia_nome, umidade_solo, decidido_em |
+
+### Schema
+
+O schema é definido em `src/main/resources/schema.sql` e aplicado
+automaticamente na primeira inicialização (idempotente via `IF NOT EXISTS`).
+Para **mudar o schema** sem recompilar, apague `data/irrigacao.mv.db` e
+deixe o app recriar.
+
+### Como consultar via dashboard
+
+Abra `http://localhost:7070` e role até a seção **📈 Relatório de consumo**.
+Selecione a cultura (ou "Todas"), informe o período e clique em **Gerar**.
+
+### Como consultar via API
+
+```
+GET /api/relatorios/consumo?cultura=milho&inicio=2026-06-14T00:00:00&fim=2026-06-21T23:59:59
+```
+
+Retorna `consumoTotal` (litros), `qtdIrrigacoes` e a lista de cada decisão
+no período.
+
+### Limitações conhecidas
+
+- Sem migrações versionadas (Flyway/Liquibase). Mudanças de schema exigem
+  apagar o arquivo do banco.
+- Banco em modo arquivo — apropriado para um único processo. Para múltiplos
+  processos simultâneos, migrar para PostgreSQL.
 
 ## Estrutura do dashboard web
 
