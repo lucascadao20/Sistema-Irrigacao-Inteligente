@@ -84,6 +84,24 @@ class GeradorLeituraProgressivoTest {
     }
 
     @Test
+    void variacaoEntreTicksConsecutivosNaoEhBrusca() {
+        // Eventos de chuva sao espalhados em 6-12 ticks. Variacao por tick
+        // tem que ficar pequena (incremento medio ~+1.5/tick + ruido ±0.15).
+        // Limite generoso de 4% por tick para nao falhar por flutuacao
+        // estatistica em sequencias muito longas.
+        GeradorLeituraProgressivo g = new GeradorLeituraProgressivo(42L);
+        double anterior = g.proximaLeituraSolo("milho");
+        for (int i = 0; i < 2_000; i++) {
+            double atual = g.proximaLeituraSolo("milho");
+            double delta = Math.abs(atual - anterior);
+            assertTrue(delta <= 4.0,
+                    "salto brusco no tick " + i + ": " + anterior + " -> " + atual
+                            + " (delta=" + delta + ")");
+            anterior = atual;
+        }
+    }
+
+    @Test
     void chamarProximaLeituraDeSoloLancaErro() {
         GeradorLeituraProgressivo g = new GeradorLeituraProgressivo(1L);
         assertThrows(IllegalArgumentException.class,

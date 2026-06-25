@@ -19,6 +19,8 @@ public final class GeradorLeituraProgressivo {
     private static final class EstadoSolo {
         double valor = 50.0;
         int ticksParaProximoEvento;
+        int ticksDeChuvaRestantes = 0;
+        double incrementoPorTickDeChuva = 0;
 
         EstadoSolo(int intervaloInicial) {
             this.ticksParaProximoEvento = intervaloInicial;
@@ -57,11 +59,26 @@ public final class GeradorLeituraProgressivo {
         EstadoSolo estado = estadoSoloPorCultura.computeIfAbsent(
                 cultura, c -> novoEstadoSolo());
 
-        estado.valor -= 0.3;
-        if (--estado.ticksParaProximoEvento <= 0) {
-            estado.valor += 15.0 + random.nextDouble() * 15.0;
+        // Decaimento basal (evaporacao). Suspenso enquanto chove.
+        if (estado.ticksDeChuvaRestantes <= 0) {
+            estado.valor -= 0.3;
+        }
+
+        // Inicia novo evento de chuva quando o intervalo termina.
+        if (--estado.ticksParaProximoEvento <= 0 && estado.ticksDeChuvaRestantes <= 0) {
+            int duracao = 6 + random.nextInt(7);          // 6..12 ticks (30s..60s)
+            double totalChuva = 8.0 + random.nextDouble() * 10.0; // +8..+18% total
+            estado.ticksDeChuvaRestantes = duracao;
+            estado.incrementoPorTickDeChuva = totalChuva / duracao;
             estado.ticksParaProximoEvento = sortearIntervaloEvento();
         }
+
+        // Aplica fracao da chuva nesse tick.
+        if (estado.ticksDeChuvaRestantes > 0) {
+            estado.valor += estado.incrementoPorTickDeChuva;
+            estado.ticksDeChuvaRestantes--;
+        }
+
         // Ruido menor que o decaimento (0.3/tick) para a tendencia ficar visivel.
         double ruido = (random.nextDouble() - 0.5) * 0.3;
         double valor = estado.valor + ruido;
