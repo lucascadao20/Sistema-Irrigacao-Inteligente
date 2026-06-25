@@ -57,6 +57,32 @@ class EstadoUltimasLeiturasTest {
     }
 
     @Test
+    void leiturasPorCulturaSaoIsoladasEntreSi() {
+        EstadoUltimasLeituras estado = new EstadoUltimasLeituras();
+        Sensor sensorMilho = new Sensor("SU-milho", TipoSensor.UMIDADE_SOLO, "milho");
+        Sensor sensorSoja  = new Sensor("SU-soja",  TipoSensor.UMIDADE_SOLO, "soja");
+
+        estado.registrar(sensorMilho, 42.0, LocalDateTime.now(), "milho");
+        estado.registrar(sensorSoja,  77.5, LocalDateTime.now(), "soja");
+
+        assertEquals(42.0,
+                estado.getUltima(TipoSensor.UMIDADE_SOLO, "milho").orElseThrow().getValor());
+        assertEquals(77.5,
+                estado.getUltima(TipoSensor.UMIDADE_SOLO, "soja").orElseThrow().getValor());
+        // O lookup "global" nao acha as por-cultura.
+        assertTrue(estado.getUltima(TipoSensor.UMIDADE_SOLO).isEmpty());
+    }
+
+    @Test
+    void leituraDeCulturaInexistenteRetornaVazio() {
+        EstadoUltimasLeituras estado = new EstadoUltimasLeituras();
+        Sensor sensorMilho = new Sensor("SU-milho", TipoSensor.UMIDADE_SOLO, "milho");
+        estado.registrar(sensorMilho, 42.0, LocalDateTime.now(), "milho");
+
+        assertTrue(estado.getUltima(TipoSensor.UMIDADE_SOLO, "soja").isEmpty());
+    }
+
+    @Test
     void deveSerThreadSafeSobEscritasConcorrentes() throws Exception {
         EstadoUltimasLeituras estado = new EstadoUltimasLeituras();
         int writers = 8;
