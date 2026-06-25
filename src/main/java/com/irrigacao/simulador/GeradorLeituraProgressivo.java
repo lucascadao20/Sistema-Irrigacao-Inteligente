@@ -2,14 +2,31 @@ package com.irrigacao.simulador;
 
 import com.irrigacao.modelo.TipoSensor;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
+/**
+ * Gerador de leituras com dinamica progressiva para os 4 tipos de sensor.
+ *
+ * <p>A <strong>umidade do solo</strong> e mantida <em>por cultura</em> — cada
+ * cultura tem seu proprio "talhao" simulado, com trajetoria independente
+ * (decaimento + eventos esporadicos de chuva). Os demais sensores
+ * (temperatura, umidade do ar, pH) sao globais.
+ */
 public final class GeradorLeituraProgressivo {
 
-    private final Random random;
+    private static final class EstadoSolo {
+        double valor = 50.0;
+        int ticksParaProximoEvento;
 
-    private double umidadeSolo = 50.0;
-    private int ticksParaProximoEvento;
+        EstadoSolo(int intervaloInicial) {
+            this.ticksParaProximoEvento = intervaloInicial;
+        }
+    }
+
+    private final Random random;
+    private final Map<String, EstadoSolo> estadoSoloPorCultura = new HashMap<>();
 
     private int tickTemperatura = 0;
     private double ultimaTemperatura = 24.0;
@@ -22,28 +39,41 @@ public final class GeradorLeituraProgressivo {
 
     public GeradorLeituraProgressivo(long seed) {
         this.random = new Random(seed);
-        this.ticksParaProximoEvento = sortearIntervaloEvento();
     }
 
+    /** Para sensores globais (temperatura, umidade do ar, pH). */
     public double proximaLeitura(TipoSensor tipo) {
         return switch (tipo) {
-            case UMIDADE_SOLO -> arredondar(proximaUmidadeSolo());
-            case TEMPERATURA  -> arredondar(proximaTemperatura());
-            case UMIDADE_AR   -> arredondar(proximaUmidadeAr());
-            case PH_SOLO      -> arredondar(proximoPh());
+            case TEMPERATURA -> arredondar(proximaTemperatura());
+            case UMIDADE_AR  -> arredondar(proximaUmidadeAr());
+            case PH_SOLO     -> arredondar(proximoPh());
+            case UMIDADE_SOLO -> throw new IllegalArgumentException(
+                    "UMIDADE_SOLO requer cultura; use proximaLeituraSolo(cultura)");
         };
     }
 
-    private double proximaUmidadeSolo() {
-        umidadeSolo -= 0.3;
-        if (--ticksParaProximoEvento <= 0) {
-            umidadeSolo += 15.0 + random.nextDouble() * 15.0;
-            ticksParaProximoEvento = sortearIntervaloEvento();
+    /** Para a umidade do solo de uma cultura especifica. */
+    public double proximaLeituraSolo(String cultura) {
+        EstadoSolo estado = estadoSoloPorCultura.computeIfAbsent(
+                cultura, c -> novoEstadoSolo());
+
+        estado.valor -= 0.3;
+        if (--estado.ticksParaProximoEvento <= 0) {
+            estado.valor += 15.0 + random.nextDouble() * 15.0;
+            estado.ticksParaProximoEvento = sortearIntervaloEvento();
         }
         // Ruido menor que o decaimento (0.3/tick) para a tendencia ficar visivel.
         double ruido = (random.nextDouble() - 0.5) * 0.3;
-        double valor = umidadeSolo + ruido;
-        return Math.max(10.0, Math.min(95.0, valor));
+        double valor = estado.valor + ruido;
+        return arredondar(Math.max(10.0, Math.min(95.0, valor)));
+    }
+
+    private EstadoSolo novoEstadoSolo() {
+        // Comeca em valores diferentes por cultura para o primeiro tick ja
+        // mostrar diversidade no dashboard.
+        EstadoSolo s = new EstadoSolo(sortearIntervaloEvento());
+        s.valor = 35.0 + random.nextDouble() * 30.0;
+        return s;
     }
 
     private double proximaTemperatura() {

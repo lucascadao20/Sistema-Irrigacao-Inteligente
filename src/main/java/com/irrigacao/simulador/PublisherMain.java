@@ -7,10 +7,21 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Properties;
 
 public class PublisherMain {
     private static final Logger logger = LoggerFactory.getLogger(PublisherMain.class);
+
+    /**
+     * Lista das culturas para as quais o simulador publica leituras de
+     * umidade do solo. Mantida em sincronia com
+     * {@code RepositorioDeCulturaEmMemoria.carregarDadosFAO()}.
+     */
+    public static final List<String> CULTURAS = List.of(
+            "milho", "soja", "arroz", "feijao", "trigo",
+            "cafe", "cana", "algodao", "tomate", "alface"
+    );
 
     public static void main(String[] args) {
         Properties props = carregarProperties();
@@ -25,7 +36,7 @@ public class PublisherMain {
         }
 
         GeradorLeituraProgressivo gerador = new GeradorLeituraProgressivo();
-        AgendadorPublicacao agendador = new AgendadorPublicacao(publisher, gerador, cfg);
+        AgendadorPublicacao agendador = new AgendadorPublicacao(publisher, gerador, cfg, CULTURAS);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             logger.info("Encerrando publicador...");

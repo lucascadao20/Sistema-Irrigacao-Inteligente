@@ -11,7 +11,7 @@ class GeradorLeituraProgressivoTest {
     void umidadeSoloDeveFicarSempreEntreLimites() {
         GeradorLeituraProgressivo g = new GeradorLeituraProgressivo(42L);
         for (int i = 0; i < 1_000; i++) {
-            double v = g.proximaLeitura(TipoSensor.UMIDADE_SOLO);
+            double v = g.proximaLeituraSolo("milho");
             assertTrue(v >= 10.0 && v <= 95.0,
                     "umidade fora dos limites no tick " + i + ": " + v);
         }
@@ -52,8 +52,8 @@ class GeradorLeituraProgressivoTest {
         GeradorLeituraProgressivo g1 = new GeradorLeituraProgressivo(123L);
         GeradorLeituraProgressivo g2 = new GeradorLeituraProgressivo(123L);
         for (int i = 0; i < 50; i++) {
-            assertEquals(g1.proximaLeitura(TipoSensor.UMIDADE_SOLO),
-                         g2.proximaLeitura(TipoSensor.UMIDADE_SOLO),
+            assertEquals(g1.proximaLeituraSolo("milho"),
+                         g2.proximaLeituraSolo("milho"),
                          "divergencia no tick " + i);
         }
     }
@@ -62,9 +62,31 @@ class GeradorLeituraProgressivoTest {
     void leiturasDevemSerArredondadasA1CasaDecimal() {
         GeradorLeituraProgressivo g = new GeradorLeituraProgressivo(7L);
         for (int i = 0; i < 50; i++) {
-            double v = g.proximaLeitura(TipoSensor.UMIDADE_SOLO);
+            double v = g.proximaLeituraSolo("milho");
             double arredondado = Math.round(v * 10.0) / 10.0;
             assertEquals(arredondado, v, 0.0001, "valor sem arredondamento: " + v);
         }
+    }
+
+    @Test
+    void culturasDiferentesTemTrajetoriasIndependentes() {
+        GeradorLeituraProgressivo g = new GeradorLeituraProgressivo(99L);
+        // Rodar varios ticks pra cada cultura
+        double milhoFinal = 0, sojaFinal = 0;
+        for (int i = 0; i < 30; i++) {
+            milhoFinal = g.proximaLeituraSolo("milho");
+            sojaFinal = g.proximaLeituraSolo("soja");
+        }
+        // As trajetorias divergem — valores nao podem ser iguais por construcao
+        // (estados separados, eventos de chuva em ticks diferentes, ruido distinto).
+        assertNotEquals(milhoFinal, sojaFinal,
+                "culturas deveriam divergir; milho=" + milhoFinal + " soja=" + sojaFinal);
+    }
+
+    @Test
+    void chamarProximaLeituraDeSoloLancaErro() {
+        GeradorLeituraProgressivo g = new GeradorLeituraProgressivo(1L);
+        assertThrows(IllegalArgumentException.class,
+                () -> g.proximaLeitura(TipoSensor.UMIDADE_SOLO));
     }
 }
