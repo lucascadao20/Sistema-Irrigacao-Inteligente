@@ -59,14 +59,37 @@ class ExecutorDeSimulacaoTest {
     void comLeituraDisponivelExecutaCicloNormalmente() {
         EstadoDoDashboard state = new EstadoDoDashboard();
         EstadoUltimasLeituras leituras = new EstadoUltimasLeituras();
-        Sensor sensorSolo = new Sensor("SU-001", TipoSensor.UMIDADE_SOLO, "Talhao A");
-        leituras.registrar(sensorSolo, 35.0, LocalDateTime.now());
+        Sensor sensorSolo = new Sensor("SU-milho", TipoSensor.UMIDADE_SOLO, "milho");
+        // Cultura ativa default = "milho"; cache deve ter leitura PARA ESSA cultura
+        leituras.registrar(sensorSolo, 35.0, LocalDateTime.now(), "milho");
 
         ExecutorDeSimulacao exec = new ExecutorDeSimulacao(cicloPadrao(), leituras, state);
 
         exec.executarCiclo(); // síncrono
         assertNotNull(state.getUltimaIrrigacao(),
                 "ciclo deveria ter rodado e registrado irrigacao");
+    }
+
+    @Test
+    void cicloUsaLeituraDaCulturaAtiva() {
+        EstadoDoDashboard state = new EstadoDoDashboard();
+        EstadoUltimasLeituras leituras = new EstadoUltimasLeituras();
+        Sensor sMilho = new Sensor("SU-milho", TipoSensor.UMIDADE_SOLO, "milho");
+        Sensor sSoja  = new Sensor("SU-soja",  TipoSensor.UMIDADE_SOLO, "soja");
+        leituras.registrar(sMilho, 22.0, LocalDateTime.now(), "milho"); // baixa
+        leituras.registrar(sSoja,  60.0, LocalDateTime.now(), "soja");  // ok
+
+        ExecutorDeSimulacao exec = new ExecutorDeSimulacao(cicloPadrao(), leituras, state);
+
+        // Cultura ativa default = milho → ciclo usa 22.0 (baixa, vai irrigar)
+        exec.executarCiclo();
+        double umidadeUsadaMilho = state.getUltimaUmidadeSolo();
+        assertEquals(22.0, umidadeUsadaMilho, 0.0001);
+
+        // Troca cultura ativa para soja → proximo ciclo usa 60.0
+        state.setCulturaAtiva("soja");
+        exec.executarCiclo();
+        assertEquals(60.0, state.getUltimaUmidadeSolo(), 0.0001);
     }
 
     @Test
@@ -87,11 +110,11 @@ class ExecutorDeSimulacaoTest {
     void flagDeAusenciaReiniciaQuandoLeituraChega() {
         EstadoDoDashboard state = new EstadoDoDashboard();
         EstadoUltimasLeituras leituras = new EstadoUltimasLeituras();
-        Sensor sensorSolo = new Sensor("SU-001", TipoSensor.UMIDADE_SOLO, "Talhao A");
+        Sensor sensorMilho = new Sensor("SU-milho", TipoSensor.UMIDADE_SOLO, "milho");
         ExecutorDeSimulacao exec = new ExecutorDeSimulacao(cicloPadrao(), leituras, state);
 
         exec.executarCiclo(); // sem leitura → alerta 1
-        leituras.registrar(sensorSolo, 40.0, LocalDateTime.now());
+        leituras.registrar(sensorMilho, 40.0, LocalDateTime.now(), "milho");
         exec.executarCiclo(); // com leitura → roda ciclo, reseta flag
 
         // Simula broker caiu e cache foi zerado — novo executor (nova instância, flag resetada)

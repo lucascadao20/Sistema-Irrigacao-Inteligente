@@ -56,20 +56,20 @@ public class ExecutorDeSimulacao {
     /** Package-private para permitir invocação síncrona em testes. */
     void executarCiclo() {
         try {
-            Optional<LeituraSensor> ultima = leituras.getUltima(TipoSensor.UMIDADE_SOLO);
+            String cultura = state.getCulturaAtiva();
+            Optional<LeituraSensor> ultima = leituras.getUltima(TipoSensor.UMIDADE_SOLO, cultura);
             if (ultima.isEmpty()) {
                 if (!avisadoAusencia) {
                     state.registrarAlerta(new Alerta(novoId(), NivelAlerta.INFO,
-                            "Aguardando primeira leitura MQTT do sensor de umidade do solo"));
+                            "Aguardando primeira leitura MQTT do sensor de umidade do solo (cultura: " + cultura + ")"));
                     avisadoAusencia = true;
                 }
-                logger.warn("Nenhuma leitura MQTT disponivel ainda; ciclo adiado");
+                logger.warn("Nenhuma leitura MQTT disponivel para cultura {}; ciclo adiado", cultura);
                 return;
             }
             avisadoAusencia = false;
 
             double umidade = ultima.get().getValor();
-            String cultura = state.getCulturaAtiva();
             Irrigacao resultado = cicloService.executarCiclo(cultura, umidade);
             DadosClimaticos clima = cicloService.getUltimoClima();
 

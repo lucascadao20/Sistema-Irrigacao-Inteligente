@@ -25,10 +25,10 @@ class ColetorMqttSensoresTest {
     void setup() {
         Properties p = new Properties();
         p.setProperty("mqtt.broker.url", "tcp://localhost:1883");
-        p.setProperty("mqtt.topico.umidade_solo", "t/umidade_solo");
-        p.setProperty("mqtt.topico.temperatura",  "t/temperatura");
-        p.setProperty("mqtt.topico.umidade_ar",   "t/umidade_ar");
-        p.setProperty("mqtt.topico.ph_solo",      "t/ph_solo");
+        p.setProperty("mqtt.topico.umidade_solo", "t/{cultura}/umidade_solo");
+        p.setProperty("mqtt.topico.temperatura",  "t/global/temperatura");
+        p.setProperty("mqtt.topico.umidade_ar",   "t/global/umidade_ar");
+        p.setProperty("mqtt.topico.ph_solo",      "t/global/ph_solo");
         ConfiguracaoMqtt cfg = ConfiguracaoMqtt.carregar(p);
 
         conexao = ConexaoH2.emMemoria();
@@ -36,10 +36,13 @@ class ColetorMqttSensoresTest {
 
         estado = new EstadoUltimasLeituras();
         gerenciador = new GerenciadorDeSensores();
-        gerenciador.registrarSensor(new Sensor("SU-001", TipoSensor.UMIDADE_SOLO, "Talhao A"));
-        gerenciador.registrarSensor(new Sensor("ST-001", TipoSensor.TEMPERATURA,  "Talhao A"));
-        gerenciador.registrarSensor(new Sensor("SA-001", TipoSensor.UMIDADE_AR,   "Talhao A"));
-        gerenciador.registrarSensor(new Sensor("SP-001", TipoSensor.PH_SOLO,      "Talhao A"));
+        // Sensores de solo por cultura — localizacao = nome da cultura
+        gerenciador.registrarSensor(new Sensor("SU-milho", TipoSensor.UMIDADE_SOLO, "milho"));
+        gerenciador.registrarSensor(new Sensor("SU-soja",  TipoSensor.UMIDADE_SOLO, "soja"));
+        // Sensores globais
+        gerenciador.registrarSensor(new Sensor("ST-001", TipoSensor.TEMPERATURA, "global"));
+        gerenciador.registrarSensor(new Sensor("SA-001", TipoSensor.UMIDADE_AR,  "global"));
+        gerenciador.registrarSensor(new Sensor("SP-001", TipoSensor.PH_SOLO,     "global"));
 
         coletor = new ColetorMqttSensores(cfg, estado, gerenciador, repositorio);
     }
@@ -50,58 +53,73 @@ class ColetorMqttSensoresTest {
     }
 
     @Test
-    void payloadValidoAtualizaCache() {
-        String payload = "{\"sensorId\":\"SU-001\",\"tipo\":\"UMIDADE_SOLO\","
+    void payloadDeSoloDoMilhoVaiParaCachePorCultura() {
+        String payload = "{\"sensorId\":\"SU-milho\",\"tipo\":\"UMIDADE_SOLO\","
                 + "\"valor\":42.7,\"unidade\":\"%\",\"timestamp\":\"2026-06-21T10:00:00\"}";
 
-        coletor.processarMensagem("t/umidade_solo", payload);
+        coletor.processarMensagem("t/milho/umidade_solo", payload);
 
         assertEquals(42.7,
-                estado.getUltima(TipoSensor.UMIDADE_SOLO).orElseThrow().getValor(),
+                estado.getUltima(TipoSensor.UMIDADE_SOLO, "milho").orElseThrow().getValor(),
                 0.0001);
+        // Nao popula o cache global
+        assertTrue(estado.getUltima(TipoSensor.UMIDADE_SOLO).isEmpty());
+    }
+
+    @Test
+    void leiturasDeCulturasDistintasSaoIndependentes() {
+        String pMilho = "{\"sensorId\":\"SU-milho\",\"tipo\":\"UMIDADE_SOLO\","
+                + "\"valor\":40.0,\"unidade\":\"%\",\"timestamp\":\"2026-06-21T10:00:00\"}";
+        String pSoja  = "{\"sensorId\":\"SU-soja\",\"tipo\":\"UMIDADE_SOLO\","
+                + "\"valor\":75.0,\"unidade\":\"%\",\"timestamp\":\"2026-06-21T10:00:00\"}";
+
+        coletor.processarMensagem("t/milho/umidade_solo", pMilho);
+        coletor.processarMensagem("t/soja/umidade_solo",  pSoja);
+
+        assertEquals(40.0, estado.getUltima(TipoSensor.UMIDADE_SOLO, "milho").orElseThrow().getValor());
+        assertEquals(75.0, estado.getUltima(TipoSensor.UMIDADE_SOLO, "soja").orElseThrow().getValor());
+    }
+
+    @Test
+    void leituraGlobalDeTemperaturaPopulaCacheGlobal() {
+        String payload = "{\"sensorId\":\"ST-001\",\"tipo\":\"TEMPERATURA\","
+                + "\"valor\":24.5,\"unidade\":\"C\",\"timestamp\":\"2026-06-21T10:00:00\"}";
+
+        coletor.processarMensagem("t/global/temperatura", payload);
+
+        assertEquals(24.5,
+                estado.getUltima(TipoSensor.TEMPERATURA).orElseThrow().getValor());
+    }
+
+    @Test
+    void payloadComJsonInvalidoNaoLancaNemPersiste() {
+        coletor.processarMensagem("t/milho/umidade_solo", "isto-nao-e-json");
+        assertTrue(estado.getUltima(TipoSensor.UMIDADE_SOLO, "milho").isEmpty());
+        assertEquals(0, repositorio.contar());
+    }
+
+    @Test
+    void payloadSemCampoValorNaoPersiste() {
+        String payload = "{\"sensorId\":\"SU-milho\",\"tipo\":\"UMIDADE_SOLO\"}";
+        coletor.processarMensagem("t/milho/umidade_solo", payload);
+        assertTrue(estado.getUltima(TipoSensor.UMIDADE_SOLO, "milho").isEmpty());
+        assertEquals(0, repositorio.contar());
+    }
+
+    @Test
+    void topicoDesconhecidoEhIgnorado() {
+        coletor.processarMensagem("t/random/algumacoisa",
+                "{\"valor\":1.0}");
+        assertEquals(0, repositorio.contar());
     }
 
     @Test
     void payloadValidoTambemPersisteNoBanco() {
-        String payload = "{\"sensorId\":\"SU-001\",\"tipo\":\"UMIDADE_SOLO\","
+        String payload = "{\"sensorId\":\"SU-milho\",\"tipo\":\"UMIDADE_SOLO\","
                 + "\"valor\":42.7,\"unidade\":\"%\",\"timestamp\":\"2026-06-21T10:00:00\"}";
 
         assertEquals(0, repositorio.contar());
-        coletor.processarMensagem("t/umidade_solo", payload);
+        coletor.processarMensagem("t/milho/umidade_solo", payload);
         assertEquals(1, repositorio.contar());
-    }
-
-    @Test
-    void payloadInvalidoNaoPersisteNoBanco() {
-        coletor.processarMensagem("t/umidade_solo", "isto-nao-e-json");
-        coletor.processarMensagem("t/umidade_solo", "{\"sensorId\":\"SU-001\"}"); // sem valor
-        assertEquals(0, repositorio.contar());
-    }
-
-    @Test
-    void payloadComJsonInvalidoNaoLancaNemAlteraCache() {
-        coletor.processarMensagem("t/umidade_solo", "isto-nao-e-json");
-        assertTrue(estado.getUltima(TipoSensor.UMIDADE_SOLO).isEmpty());
-    }
-
-    @Test
-    void payloadSemCampoValorNaoAlteraCache() {
-        String payload = "{\"sensorId\":\"SU-001\",\"tipo\":\"UMIDADE_SOLO\"}";
-        coletor.processarMensagem("t/umidade_solo", payload);
-        assertTrue(estado.getUltima(TipoSensor.UMIDADE_SOLO).isEmpty());
-    }
-
-    @Test
-    void tipoDoTopicoPrecedeOTipoDoPayload() {
-        // Se o JSON declara UMIDADE_AR mas chega no topico de UMIDADE_SOLO,
-        // o sensor usado é o de UMIDADE_SOLO (a verdade vem do topico).
-        String payload = "{\"sensorId\":\"SA-001\",\"tipo\":\"UMIDADE_AR\","
-                + "\"valor\":80.0,\"unidade\":\"%\",\"timestamp\":\"2026-06-21T10:00:00\"}";
-
-        coletor.processarMensagem("t/umidade_solo", payload);
-
-        assertEquals(80.0,
-                estado.getUltima(TipoSensor.UMIDADE_SOLO).orElseThrow().getValor(), 0.0001);
-        assertTrue(estado.getUltima(TipoSensor.UMIDADE_AR).isEmpty());
     }
 }

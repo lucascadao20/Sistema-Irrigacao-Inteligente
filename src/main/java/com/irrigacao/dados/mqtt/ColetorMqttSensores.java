@@ -17,18 +17,53 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class ColetorMqttSensores {
     private static final Logger logger = LoggerFactory.getLogger(ColetorMqttSensores.class);
+    private static final String PLACEHOLDER = "{cultura}";
+
+    /**
+     * Cada entrada e um topico assinado: o pattern original (com {cultura} ou
+     * fixo), o tipo de sensor associado, o prefixo e o sufixo do pattern para
+     * extrair a cultura quando o topic for variavel.
+     */
+    private record Inscricao(String pattern, TipoSensor tipo, String prefixo, String sufixo, boolean porCultura) {
+        static Inscricao de(String pattern, TipoSensor tipo) {
+            int idx = pattern.indexOf(PLACEHOLDER);
+            if (idx < 0) {
+                return new Inscricao(pattern, tipo, "", "", false);
+            }
+            return new Inscricao(
+                    pattern,
+                    tipo,
+                    pattern.substring(0, idx),
+                    pattern.substring(idx + PLACEHOLDER.length()),
+                    true);
+        }
+
+        String wildcardMqtt() {
+            return porCultura ? prefixo + "+" + sufixo : pattern;
+        }
+
+        /** Extrai cultura do topic recebido; retorna GLOBAL se a inscricao for fixa. */
+        String extrairCultura(String topic) {
+            if (!porCultura) return EstadoUltimasLeituras.GLOBAL;
+            if (topic.startsWith(prefixo) && topic.endsWith(sufixo)
+                    && topic.length() > prefixo.length() + sufixo.length()) {
+                return topic.substring(prefixo.length(), topic.length() - sufixo.length());
+            }
+            return null;
+        }
+    }
 
     private final ConfiguracaoMqtt cfg;
     private final EstadoUltimasLeituras estado;
     private final GerenciadorDeSensores gerenciador;
     private final RepositorioDeLeituraSensor repositorioLeitura;
-    private final Map<String, TipoSensor> tipoPorTopico;
+    private final List<Inscricao> inscricoes;
 
     private MqttClient client;
 
@@ -40,8 +75,9 @@ public class ColetorMqttSensores {
         this.estado = estado;
         this.gerenciador = gerenciador;
         this.repositorioLeitura = repositorioLeitura;
-        this.tipoPorTopico = new HashMap<>();
-        cfg.topicosPorTipo().forEach((tipo, topico) -> tipoPorTopico.put(topico, tipo));
+        this.inscricoes = new ArrayList<>();
+        cfg.topicosPorTipo().forEach((tipo, pattern) ->
+                inscricoes.add(Inscricao.de(pattern, tipo)));
     }
 
     public void iniciar() throws MqttException {
@@ -63,11 +99,11 @@ public class ColetorMqttSensores {
         });
 
         client.connect(opts);
-        for (String topico : cfg.topicosPorTipo().values()) {
-            client.subscribe(topico, 0);
+        for (Inscricao i : inscricoes) {
+            client.subscribe(i.wildcardMqtt(), 0);
         }
-        logger.info("ColetorMqttSensores conectado a {} e assinado nos {} topicos",
-                cfg.brokerUrl(), cfg.topicosPorTipo().size());
+        logger.info("ColetorMqttSensores conectado a {} e assinado em {} patterns",
+                cfg.brokerUrl(), inscricoes.size());
     }
 
     public void parar() {
@@ -82,9 +118,15 @@ public class ColetorMqttSensores {
     }
 
     public void processarMensagem(String topico, String payload) {
-        TipoSensor tipo = tipoPorTopico.get(topico);
-        if (tipo == null) {
+        Inscricao inscricao = casarInscricao(topico);
+        if (inscricao == null) {
             logger.warn("Mensagem recebida em topico desconhecido: {}", topico);
+            return;
+        }
+
+        String cultura = inscricao.extrairCultura(topico);
+        if (cultura == null) {
+            logger.warn("Nao foi possivel extrair cultura do topico {}", topico);
             return;
         }
 
@@ -94,13 +136,10 @@ public class ColetorMqttSensores {
             return;
         }
 
-        Sensor sensor = gerenciador.getSensoresAtivos().stream()
-                .filter(s -> s.getTipo() == tipo)
-                .findFirst()
-                .orElse(null);
-
+        Sensor sensor = encontrarSensor(inscricao.tipo(), cultura);
         if (sensor == null) {
-            logger.warn("Nenhum sensor ativo registrado para tipo {}", tipo);
+            logger.warn("Nenhum sensor ativo para tipo {} / cultura '{}'",
+                    inscricao.tipo(), cultura);
             return;
         }
 
@@ -109,8 +148,33 @@ public class ColetorMqttSensores {
         // de vista do app". O timestamp do publicador fica disponível no log do
         // broker para diagnóstico, se necessário.
         LocalDateTime agora = LocalDateTime.now();
-        estado.registrar(sensor, valorOpt.get(), agora);
+        estado.registrar(sensor, valorOpt.get(), agora, cultura);
         repositorioLeitura.salvar(new LeituraSensor(sensor, valorOpt.get(), agora));
+    }
+
+    private Inscricao casarInscricao(String topico) {
+        for (Inscricao i : inscricoes) {
+            if (i.porCultura()) {
+                if (topico.startsWith(i.prefixo()) && topico.endsWith(i.sufixo())
+                        && topico.length() > i.prefixo().length() + i.sufixo().length()) {
+                    return i;
+                }
+            } else if (topico.equals(i.pattern())) {
+                return i;
+            }
+        }
+        return null;
+    }
+
+    private Sensor encontrarSensor(TipoSensor tipo, String cultura) {
+        if (EstadoUltimasLeituras.GLOBAL.equals(cultura)) {
+            return gerenciador.getSensoresAtivos().stream()
+                    .filter(s -> s.getTipo() == tipo)
+                    .findFirst().orElse(null);
+        }
+        return gerenciador.getSensoresAtivos().stream()
+                .filter(s -> s.getTipo() == tipo && cultura.equals(s.getLocalizacao()))
+                .findFirst().orElse(null);
     }
 
     private static Optional<Double> extrairValor(String payload) {
