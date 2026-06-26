@@ -54,36 +54,44 @@ public final class GeradorLeituraProgressivo {
         };
     }
 
-    /** Para a umidade do solo de uma cultura especifica. */
+    /**
+     * Geracao para umidade do solo, por cultura.
+     *
+     * <p>Modelo simplificado para demo: combina <strong>mean reversion</strong>
+     * (o solo gravita em torno de uma umidade-meta de 50%) com eventos
+     * esporadicos de chuva que empurram a umidade pra cima por varios ticks.
+     * Garante oscilacao saudavel sem travar nos limites em execucoes longas.
+     */
     public double proximaLeituraSolo(String cultura) {
         EstadoSolo estado = estadoSoloPorCultura.computeIfAbsent(
                 cultura, c -> novoEstadoSolo());
 
-        // Decaimento basal (evaporacao). Suspenso enquanto chove.
-        if (estado.ticksDeChuvaRestantes <= 0) {
-            estado.valor -= 0.3;
-        }
+        // Mean reversion: puxa em direcao a META proporcionalmente a distancia.
+        // Sem isso, decay fixo + rain podia saturar num dos extremos.
+        estado.valor -= (estado.valor - META_UMIDADE) * FORCA_ATRACAO;
 
-        // Inicia novo evento de chuva quando o intervalo termina.
-        if (--estado.ticksParaProximoEvento <= 0 && estado.ticksDeChuvaRestantes <= 0) {
-            int duracao = 6 + random.nextInt(7);          // 6..12 ticks (30s..60s)
-            double totalChuva = 8.0 + random.nextDouble() * 10.0; // +8..+18% total
-            estado.ticksDeChuvaRestantes = duracao;
-            estado.incrementoPorTickDeChuva = totalChuva / duracao;
-            estado.ticksParaProximoEvento = sortearIntervaloEvento();
-        }
-
-        // Aplica fracao da chuva nesse tick.
         if (estado.ticksDeChuvaRestantes > 0) {
+            // Chuva em andamento: aplica fracao deste tick e decrementa.
             estado.valor += estado.incrementoPorTickDeChuva;
             estado.ticksDeChuvaRestantes--;
+        } else {
+            // Sem chuva: decrementa o contador para o proximo evento.
+            if (--estado.ticksParaProximoEvento <= 0) {
+                int duracao = 6 + random.nextInt(7);                   // 6..12 ticks
+                double totalChuva = 5.0 + random.nextDouble() * 8.0;   // +5..+13% total
+                estado.ticksDeChuvaRestantes = duracao;
+                estado.incrementoPorTickDeChuva = totalChuva / duracao;
+                estado.ticksParaProximoEvento = sortearIntervaloEvento();
+            }
         }
 
-        // Ruido menor que o decaimento (0.3/tick) para a tendencia ficar visivel.
         double ruido = (random.nextDouble() - 0.5) * 0.3;
         double valor = estado.valor + ruido;
         return arredondar(Math.max(10.0, Math.min(95.0, valor)));
     }
+
+    private static final double META_UMIDADE = 50.0;
+    private static final double FORCA_ATRACAO = 0.04; // % da distancia por tick
 
     private EstadoSolo novoEstadoSolo() {
         // Comeca em valores diferentes por cultura para o primeiro tick ja
@@ -115,7 +123,7 @@ public final class GeradorLeituraProgressivo {
     }
 
     private int sortearIntervaloEvento() {
-        return 8 + random.nextInt(8); // 8..15
+        return 15 + random.nextInt(15); // 15..29 ticks entre chuvas (75s..145s)
     }
 
     private static double arredondar(double v) {

@@ -102,6 +102,32 @@ class GeradorLeituraProgressivoTest {
     }
 
     @Test
+    void umidadeNaoFicaTravadaNosLimitesEmExecucaoLonga() {
+        // Roda 5_000 ticks (= ~7h reais a 5s/tick) e mede a fracao do tempo
+        // que o valor passou nos extremos. Se sistema for desbalanceado,
+        // satura num dos lados.
+        GeradorLeituraProgressivo g = new GeradorLeituraProgressivo(99L);
+        int travadoNoTopo = 0, travadoNoFundo = 0;
+        double soma = 0;
+        int n = 5_000;
+        for (int i = 0; i < n; i++) {
+            double v = g.proximaLeituraSolo("milho");
+            soma += v;
+            if (v >= 94.0) travadoNoTopo++;
+            if (v <= 11.0) travadoNoFundo++;
+        }
+        double media = soma / n;
+        // Sistema saudavel: deve passar < 5% do tempo em cada extremo.
+        assertTrue(travadoNoTopo < n * 0.05,
+                "travou no topo " + travadoNoTopo + "/" + n + " ticks (media=" + media + ")");
+        assertTrue(travadoNoFundo < n * 0.05,
+                "travou no fundo " + travadoNoFundo + "/" + n + " ticks (media=" + media + ")");
+        // Media de longo prazo deve ficar numa faixa razoavel (nao colada nos limites).
+        assertTrue(media >= 25 && media <= 70,
+                "media fora da faixa saudavel: " + media);
+    }
+
+    @Test
     void chamarProximaLeituraDeSoloLancaErro() {
         GeradorLeituraProgressivo g = new GeradorLeituraProgressivo(1L);
         assertThrows(IllegalArgumentException.class,
