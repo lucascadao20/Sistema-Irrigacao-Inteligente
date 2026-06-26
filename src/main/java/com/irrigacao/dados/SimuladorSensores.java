@@ -29,23 +29,15 @@ public class SimuladorSensores {
         this.gerenciador = gerenciador;
     }
 
-    /**
-     * Culturas para as quais sao registrados sensores de umidade do solo
-     * (cada cultura = um talhao distinto). Mantida em sincronia com
-     * {@code RepositorioDeCulturaEmMemoria.carregarDadosFAO()} e com
-     * {@code com.irrigacao.simulador.PublisherMain.CULTURAS}.
-     */
     public static final java.util.List<String> CULTURAS_COM_SENSORES =
             java.util.List.of("milho", "soja", "arroz", "feijao", "trigo",
                               "cafe", "cana", "algodao", "tomate", "alface");
 
     public void inicializarSensores() {
-        // Um sensor de umidade do solo por cultura (cada cultura = um talhao).
         for (String cultura : CULTURAS_COM_SENSORES) {
             gerenciador.registrarSensor(
                     new Sensor("SU-" + cultura, TipoSensor.UMIDADE_SOLO, cultura));
         }
-        // Sensores globais (estacao meteorologica de campo).
         gerenciador.registrarSensor(new Sensor("ST-001", TipoSensor.TEMPERATURA, "global"));
         gerenciador.registrarSensor(new Sensor("SA-001", TipoSensor.UMIDADE_AR,  "global"));
         gerenciador.registrarSensor(new Sensor("SP-001", TipoSensor.PH_SOLO,     "global"));

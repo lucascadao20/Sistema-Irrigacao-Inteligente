@@ -6,14 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-/**
- * Gerador de leituras com dinamica progressiva para os 4 tipos de sensor.
- *
- * <p>A <strong>umidade do solo</strong> e mantida <em>por cultura</em> — cada
- * cultura tem seu proprio "talhao" simulado, com trajetoria independente
- * (decaimento + eventos esporadicos de chuva). Os demais sensores
- * (temperatura, umidade do ar, pH) sao globais.
- */
 public final class GeradorLeituraProgressivo {
 
     private static final class EstadoSolo {
@@ -43,7 +35,6 @@ public final class GeradorLeituraProgressivo {
         this.random = new Random(seed);
     }
 
-    /** Para sensores globais (temperatura, umidade do ar, pH). */
     public double proximaLeitura(TipoSensor tipo) {
         return switch (tipo) {
             case TEMPERATURA -> arredondar(proximaTemperatura());
@@ -54,35 +45,21 @@ public final class GeradorLeituraProgressivo {
         };
     }
 
-    /**
-     * Geracao para umidade do solo, por cultura.
-     *
-     * <p>Modelo simplificado para demo: combina <strong>mean reversion</strong>
-     * (o solo gravita em torno de uma umidade-meta de 50%) com eventos
-     * esporadicos de chuva que empurram a umidade pra cima por varios ticks.
-     * Garante oscilacao saudavel sem travar nos limites em execucoes longas.
-     */
     public double proximaLeituraSolo(String cultura) {
         EstadoSolo estado = estadoSoloPorCultura.computeIfAbsent(
                 cultura, c -> novoEstadoSolo());
 
-        // Mean reversion: puxa em direcao a META proporcionalmente a distancia.
-        // Sem isso, decay fixo + rain podia saturar num dos extremos.
         estado.valor -= (estado.valor - META_UMIDADE) * FORCA_ATRACAO;
 
         if (estado.ticksDeChuvaRestantes > 0) {
-            // Chuva em andamento: aplica fracao deste tick e decrementa.
             estado.valor += estado.incrementoPorTickDeChuva;
             estado.ticksDeChuvaRestantes--;
-        } else {
-            // Sem chuva: decrementa o contador para o proximo evento.
-            if (--estado.ticksParaProximoEvento <= 0) {
-                int duracao = 6 + random.nextInt(7);                   // 6..12 ticks
-                double totalChuva = 5.0 + random.nextDouble() * 8.0;   // +5..+13% total
-                estado.ticksDeChuvaRestantes = duracao;
-                estado.incrementoPorTickDeChuva = totalChuva / duracao;
-                estado.ticksParaProximoEvento = sortearIntervaloEvento();
-            }
+        } else if (--estado.ticksParaProximoEvento <= 0) {
+            int duracao = 6 + random.nextInt(7);
+            double totalChuva = 5.0 + random.nextDouble() * 8.0;
+            estado.ticksDeChuvaRestantes = duracao;
+            estado.incrementoPorTickDeChuva = totalChuva / duracao;
+            estado.ticksParaProximoEvento = sortearIntervaloEvento();
         }
 
         double ruido = (random.nextDouble() - 0.5) * 0.3;
@@ -91,11 +68,9 @@ public final class GeradorLeituraProgressivo {
     }
 
     private static final double META_UMIDADE = 50.0;
-    private static final double FORCA_ATRACAO = 0.04; // % da distancia por tick
+    private static final double FORCA_ATRACAO = 0.04;
 
     private EstadoSolo novoEstadoSolo() {
-        // Comeca em valores diferentes por cultura para o primeiro tick ja
-        // mostrar diversidade no dashboard.
         EstadoSolo s = new EstadoSolo(sortearIntervaloEvento());
         s.valor = 35.0 + random.nextDouble() * 30.0;
         return s;
@@ -123,7 +98,7 @@ public final class GeradorLeituraProgressivo {
     }
 
     private int sortearIntervaloEvento() {
-        return 15 + random.nextInt(15); // 15..29 ticks entre chuvas (75s..145s)
+        return 15 + random.nextInt(15);
     }
 
     private static double arredondar(double v) {

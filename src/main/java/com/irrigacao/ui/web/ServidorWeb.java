@@ -147,9 +147,6 @@ public class ServidorWeb {
             String nova = body.get("cultura");
             if (nova != null && repositorioDeCultura.buscarPorNome(nova).isPresent()) {
                 state.setCulturaAtiva(nova.toLowerCase());
-                // O proximo ciclo regular de 30s ja captura a nova cultura.
-                // Nao disparamos ciclo imediato para evitar spam de alertas
-                // a cada troca de cultura no dropdown.
                 ctx.json(Map.of("ok", true, "cultura", state.getCulturaAtiva()));
             } else {
                 ctx.status(400).json(Map.of("ok", false, "erro", "cultura invalida"));
@@ -216,11 +213,6 @@ public class ServidorWeb {
         System.out.println("[WEB] Pressione Ctrl+C para encerrar.");
     }
 
-    /**
-     * Aceita tanto o ID em lower-case (chave do repositorio, ex.: "milho") quanto
-     * o nome exibido (ex.: "Milho") e retorna sempre o nome canonico armazenado em
-     * `cultura_nome` na tabela `irrigacao`.
-     */
     private String resolverNomeCultura(String entrada, RepositorioDeCultura repo) {
         return repo.buscarPorNome(entrada)
                 .map(Cultura::getNome)

@@ -25,11 +25,6 @@ public class ColetorMqttSensores {
     private static final Logger logger = LoggerFactory.getLogger(ColetorMqttSensores.class);
     private static final String PLACEHOLDER = "{cultura}";
 
-    /**
-     * Cada entrada e um topico assinado: o pattern original (com {cultura} ou
-     * fixo), o tipo de sensor associado, o prefixo e o sufixo do pattern para
-     * extrair a cultura quando o topic for variavel.
-     */
     private record Inscricao(String pattern, TipoSensor tipo, String prefixo, String sufixo, boolean porCultura) {
         static Inscricao de(String pattern, TipoSensor tipo) {
             int idx = pattern.indexOf(PLACEHOLDER);
@@ -48,7 +43,6 @@ public class ColetorMqttSensores {
             return porCultura ? prefixo + "+" + sufixo : pattern;
         }
 
-        /** Extrai cultura do topic recebido; retorna GLOBAL se a inscricao for fixa. */
         String extrairCultura(String topic) {
             if (!porCultura) return EstadoUltimasLeituras.GLOBAL;
             if (topic.startsWith(prefixo) && topic.endsWith(sufixo)
@@ -143,10 +137,6 @@ public class ColetorMqttSensores {
             return;
         }
 
-        // Usamos o instante de recepção em vez do timestamp do payload — para o
-        // ciclo de irrigação o que importa é "quão recente é a leitura sob o ponto
-        // de vista do app". O timestamp do publicador fica disponível no log do
-        // broker para diagnóstico, se necessário.
         LocalDateTime agora = LocalDateTime.now();
         estado.registrar(sensor, valorOpt.get(), agora, cultura);
         repositorioLeitura.salvar(new LeituraSensor(sensor, valorOpt.get(), agora));

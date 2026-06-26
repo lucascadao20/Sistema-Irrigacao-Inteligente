@@ -13,11 +13,6 @@ import java.util.Properties;
 public class PublisherMain {
     private static final Logger logger = LoggerFactory.getLogger(PublisherMain.class);
 
-    /**
-     * Lista das culturas para as quais o simulador publica leituras de
-     * umidade do solo. Mantida em sincronia com
-     * {@code RepositorioDeCulturaEmMemoria.carregarDadosFAO()}.
-     */
     public static final List<String> CULTURAS = List.of(
             "milho", "soja", "arroz", "feijao", "trigo",
             "cafe", "cana", "algodao", "tomate", "alface"
@@ -46,7 +41,6 @@ public class PublisherMain {
         agendador.iniciar();
         logger.info("Publicador rodando. Ctrl+C para encerrar.");
 
-        // Mantem o processo vivo
         try {
             Thread.currentThread().join();
         } catch (InterruptedException ignored) {

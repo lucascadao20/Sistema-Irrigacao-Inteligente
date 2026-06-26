@@ -53,7 +53,6 @@ public class ExecutorDeSimulacao {
         executor.execute(this::executarCiclo);
     }
 
-    /** Package-private para permitir invocação síncrona em testes. */
     void executarCiclo() {
         try {
             String cultura = state.getCulturaAtiva();

@@ -20,7 +20,6 @@ public class AgendadorPublicacao {
     private static final DateTimeFormatter ISO = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
     private static final Gson GSON = new Gson();
 
-    /** Placeholder no topico de umidade do solo, substituido por nome da cultura. */
     public static final String PLACEHOLDER_CULTURA = "{cultura}";
 
     private static final Map<TipoSensor, String> ID_GLOBAL_POR_TIPO = Map.of(
@@ -65,24 +64,20 @@ public class AgendadorPublicacao {
     public void executarTick() {
         LocalDateTime agora = LocalDateTime.now();
 
-        // Umidade do solo: uma publicacao por cultura
         String topicoSoloPattern = cfg.topicosPorTipo().get(TipoSensor.UMIDADE_SOLO);
         for (String cultura : culturas) {
             double valor = gerador.proximaLeituraSolo(cultura);
             String topico = topicoSoloPattern.replace(PLACEHOLDER_CULTURA, cultura);
-            String sensorId = "SU-" + cultura;
-            String payload = montarPayload(TipoSensor.UMIDADE_SOLO, valor, agora, sensorId);
+            String payload = montarPayload(TipoSensor.UMIDADE_SOLO, valor, agora, "SU-" + cultura);
             publisher.publicar(topico, payload);
         }
 
-        // Demais sensores: publicacao global (uma por tipo)
         for (Map.Entry<TipoSensor, String> entry : cfg.topicosPorTipo().entrySet()) {
             TipoSensor tipo = entry.getKey();
             if (tipo == TipoSensor.UMIDADE_SOLO) continue;
-            String topico = entry.getValue();
             double valor = gerador.proximaLeitura(tipo);
             String payload = montarPayload(tipo, valor, agora, ID_GLOBAL_POR_TIPO.get(tipo));
-            publisher.publicar(topico, payload);
+            publisher.publicar(entry.getValue(), payload);
         }
     }
 
