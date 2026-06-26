@@ -3,7 +3,7 @@ package com.irrigacao.dados.mqtt;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
-import com.irrigacao.dados.GerenciadorDeSensores;
+import com.irrigacao.dados.sensores.GerenciadorDeSensores;
 import com.irrigacao.dados.bd.RepositorioDeLeituraSensor;
 import com.irrigacao.modelo.LeituraSensor;
 import com.irrigacao.modelo.Sensor;

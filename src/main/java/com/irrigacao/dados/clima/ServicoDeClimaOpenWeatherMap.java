@@ -1,6 +1,6 @@
-package com.irrigacao.dados;
+package com.irrigacao.dados.clima;
 
-import com.irrigacao.dados.ServicoDeClima;
+import com.irrigacao.dados.clima.ServicoDeClima;
 import com.irrigacao.modelo.DadosClimaticos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

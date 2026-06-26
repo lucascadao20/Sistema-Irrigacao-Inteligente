@@ -1,6 +1,6 @@
-package com.irrigacao.dados;
+package com.irrigacao.dados.sensores;
 
-import com.irrigacao.dados.GerenciadorDeSensores;
+import com.irrigacao.dados.sensores.GerenciadorDeSensores;
 import com.irrigacao.modelo.TipoSensor;
 import com.irrigacao.modelo.DadosClimaticos;
 import com.irrigacao.modelo.Sensor;

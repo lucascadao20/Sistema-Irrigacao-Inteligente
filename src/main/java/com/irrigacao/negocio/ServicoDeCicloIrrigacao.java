@@ -1,9 +1,9 @@
 package com.irrigacao.negocio;
 
-import com.irrigacao.dados.ServicoDeClima;
-import com.irrigacao.dados.RepositorioDeCultura;
-import com.irrigacao.dados.GerenciadorDeSensores;
-import com.irrigacao.dados.ProcessadorDeDados;
+import com.irrigacao.dados.clima.ServicoDeClima;
+import com.irrigacao.dados.cultura.RepositorioDeCultura;
+import com.irrigacao.dados.sensores.GerenciadorDeSensores;
+import com.irrigacao.dados.sensores.ProcessadorDeDados;
 import com.irrigacao.dados.bd.RepositorioDeIrrigacao;
 import com.irrigacao.modelo.TipoSensor;
 import com.irrigacao.modelo.Cultura;

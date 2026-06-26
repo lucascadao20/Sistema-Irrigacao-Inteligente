@@ -1,7 +1,7 @@
 package com.irrigacao.negocio;
 
 import com.irrigacao.negocio.FabricaDeEstrategia;
-import com.irrigacao.dados.NotificadorDeAlerta;
+import com.irrigacao.dados.notificacao.NotificadorDeAlerta;
 import com.irrigacao.modelo.NivelAlerta;
 import com.irrigacao.modelo.StatusIrrigacao;
 import com.irrigacao.modelo.Alerta;

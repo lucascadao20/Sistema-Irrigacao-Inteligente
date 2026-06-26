@@ -1,6 +1,6 @@
 package com.irrigacao.ui.web;
 
-import com.irrigacao.dados.NotificadorDeAlerta;
+import com.irrigacao.dados.notificacao.NotificadorDeAlerta;
 import com.irrigacao.modelo.Alerta;
 
 public class NotificadorDeAlertaWeb implements NotificadorDeAlerta {

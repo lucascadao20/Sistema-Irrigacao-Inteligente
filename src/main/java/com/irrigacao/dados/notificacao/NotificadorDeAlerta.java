@@ -1,4 +1,4 @@
-package com.irrigacao.dados;
+package com.irrigacao.dados.notificacao;
 
 import com.irrigacao.modelo.Alerta;
 

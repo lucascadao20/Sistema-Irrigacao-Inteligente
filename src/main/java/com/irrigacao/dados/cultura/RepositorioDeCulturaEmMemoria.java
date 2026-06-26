@@ -1,6 +1,6 @@
-package com.irrigacao.dados;
+package com.irrigacao.dados.cultura;
 
-import com.irrigacao.dados.RepositorioDeCultura;
+import com.irrigacao.dados.cultura.RepositorioDeCultura;
 import com.irrigacao.modelo.Cultura;
 
 import java.util.HashMap;

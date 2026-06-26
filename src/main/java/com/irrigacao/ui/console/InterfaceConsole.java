@@ -1,12 +1,12 @@
 package com.irrigacao.ui.console;
 
 import com.irrigacao.negocio.ServicoDeCicloIrrigacao;
-import com.irrigacao.dados.GerenciadorDeSensores;
+import com.irrigacao.dados.sensores.GerenciadorDeSensores;
 import com.irrigacao.modelo.Cultura;
 import com.irrigacao.modelo.DadosClimaticos;
 import com.irrigacao.modelo.Irrigacao;
 import com.irrigacao.ConfiguracaoApp;
-import com.irrigacao.dados.SimuladorSensores;
+import com.irrigacao.dados.sensores.SimuladorSensores;
 
 import java.time.LocalDateTime;
 import java.util.Map;

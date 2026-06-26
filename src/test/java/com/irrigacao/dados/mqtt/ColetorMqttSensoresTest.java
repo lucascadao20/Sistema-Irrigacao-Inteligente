@@ -1,6 +1,6 @@
 package com.irrigacao.dados.mqtt;
 
-import com.irrigacao.dados.GerenciadorDeSensores;
+import com.irrigacao.dados.sensores.GerenciadorDeSensores;
 import com.irrigacao.dados.bd.ConexaoH2;
 import com.irrigacao.dados.bd.RepositorioDeLeituraSensorH2;
 import com.irrigacao.modelo.Sensor;

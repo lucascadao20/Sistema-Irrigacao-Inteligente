@@ -1,4 +1,4 @@
-package com.irrigacao.dados;
+package com.irrigacao.dados.clima;
 
 import com.irrigacao.modelo.DadosClimaticos;
 

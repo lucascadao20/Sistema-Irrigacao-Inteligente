@@ -1,4 +1,4 @@
-package com.irrigacao.dados;
+package com.irrigacao.dados.cultura;
 
 import com.irrigacao.modelo.Cultura;
 import java.util.Map;
