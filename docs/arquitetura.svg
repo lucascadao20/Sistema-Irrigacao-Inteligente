@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 700" font-family="'Segoe UI', 'Inter', Roboto, system-ui, sans-serif">
+  <defs>
+    <filter id="shadow" x="-2%" y="-2%" width="104%" height="108%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-opacity="0.10"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#3d4651"/>
+    </marker>
+    <style>
+      .title    { font-size: 24px; font-weight: 700; fill: #1f2a1c; }
+      .subtitle { font-size: 13px; fill: #6b7763; }
+      .layer    { font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
+      .role     { font-size: 12px; fill: #6b7763; font-style: italic; }
+      .compo    { font-size: 14px; fill: #2a3a2a; }
+      .legend   { font-size: 12px; fill: #4a5462; }
+    </style>
+  </defs>
+
+  <rect width="1000" height="700" fill="#fbfbf7"/>
+
+  <!-- Title -->
+  <text x="500" y="48" text-anchor="middle" class="title">Arquitetura em Camadas</text>
+  <text x="500" y="72" text-anchor="middle" class="subtitle">Sistema de Irrigação Inteligente · separação de responsabilidades</text>
+
+  <!-- ==================== UI ==================== -->
+  <g filter="url(#shadow)">
+    <rect x="100" y="120" width="800" height="100" rx="10" fill="#fff3e0" stroke="#e65100" stroke-width="2.5"/>
+  </g>
+  <text x="140" y="160" class="layer" fill="#bf360c">UI</text>
+  <text x="140" y="180" class="role">interface com o usuário</text>
+  <line x1="320" y1="135" x2="320" y2="205" stroke="#e65100" stroke-width="1" opacity="0.35"/>
+  <text x="360" y="160" class="compo">• Dashboard Web (HTTP + dashboard ao vivo)</text>
+  <text x="360" y="185" class="compo">• Console CLI (modo demo / interativo)</text>
+
+  <!-- Seta -->
+  <line x1="500" y1="220" x2="500" y2="265" stroke="#3d4651" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- ==================== NEGOCIO ==================== -->
+  <g filter="url(#shadow)">
+    <rect x="100" y="270" width="800" height="100" rx="10" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2.5"/>
+  </g>
+  <text x="140" y="310" class="layer" fill="#1b5e20">NEGÓCIO</text>
+  <text x="140" y="330" class="role">regras de irrigação</text>
+  <line x1="320" y1="285" x2="320" y2="355" stroke="#2e7d32" stroke-width="1" opacity="0.35"/>
+  <text x="360" y="310" class="compo">• ServiçoDeCicloIrrigação  · MotorDeRegras</text>
+  <text x="360" y="335" class="compo">• Estratégias (Emergencial · Seco · Úmido)  · Fábrica</text>
+
+  <!-- Seta -->
+  <line x1="500" y1="370" x2="500" y2="415" stroke="#3d4651" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- ==================== DADOS ==================== -->
+  <g filter="url(#shadow)">
+    <rect x="100" y="420" width="800" height="100" rx="10" fill="#e3f2fd" stroke="#1565c0" stroke-width="2.5"/>
+  </g>
+  <text x="140" y="460" class="layer" fill="#0d47a1">DADOS</text>
+  <text x="140" y="480" class="role">acesso a fontes externas</text>
+  <line x1="320" y1="435" x2="320" y2="505" stroke="#1565c0" stroke-width="1" opacity="0.35"/>
+  <text x="360" y="460" class="compo">• Repositórios (cultura · leituras · irrigações em H2)</text>
+  <text x="360" y="485" class="compo">• Coletor MQTT  · Cliente OpenWeatherMap</text>
+
+  <!-- Seta -->
+  <line x1="500" y1="520" x2="500" y2="565" stroke="#3d4651" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- ==================== MODELO ==================== -->
+  <g filter="url(#shadow)">
+    <rect x="100" y="570" width="800" height="80" rx="10" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="2.5"/>
+  </g>
+  <text x="140" y="610" class="layer" fill="#4a148c">MODELO</text>
+  <text x="140" y="628" class="role">entidades do domínio</text>
+  <line x1="320" y1="585" x2="320" y2="640" stroke="#6a1b9a" stroke-width="1" opacity="0.35"/>
+  <text x="360" y="618" class="compo">Cultura · Sensor · LeituraSensor · Irrigação · Alerta · DadosClimáticos</text>
+
+  <!-- Legenda lateral -->
+  <text x="940" y="170" text-anchor="end" class="legend" font-style="italic">depende de ↓</text>
+
+</svg>

@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 600" font-family="'Segoe UI', 'Inter', Roboto, system-ui, sans-serif">
+  <defs>
+    <filter id="shadow" x="-2%" y="-2%" width="104%" height="108%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#3d4651"/>
+    </marker>
+    <style>
+      .title    { font-size: 24px; font-weight: 700; fill: #1f2a1c; }
+      .subtitle { font-size: 13px; fill: #6b7763; }
+      .role     { font-size: 22px; font-weight: 700; letter-spacing: 1px; }
+      .impl     { font-size: 14px; fill: #2a3a2a; }
+      .impl-sub { font-size: 12px; fill: #6b7763; font-style: italic; }
+      .arrow    { font-size: 14px; font-weight: 700; fill: #1f2a1c; }
+      .arrow-sub{ font-size: 12px; fill: #6b7763; font-style: italic; }
+      .caption  { font-size: 13px; fill: #4a5462; }
+    </style>
+  </defs>
+
+  <rect width="1100" height="600" fill="#fbfbf7"/>
+
+  <!-- Title -->
+  <text x="550" y="48" text-anchor="middle" class="title">Padrão Publish / Subscribe via MQTT</text>
+  <text x="550" y="72" text-anchor="middle" class="subtitle">Sistema de Irrigação Inteligente · simulador de sensores IoT</text>
+
+  <!-- ==================== PUBLICADOR ==================== -->
+  <g filter="url(#shadow)">
+    <rect x="60" y="170" width="280" height="200" rx="14" fill="#e8f5e9" stroke="#2e7d32" stroke-width="3"/>
+  </g>
+  <text x="200" y="215" text-anchor="middle" class="role" fill="#1b5e20">PUBLICADOR</text>
+  <text x="200" y="240" text-anchor="middle" class="impl-sub">papel: sensor IoT simulado</text>
+
+  <line x1="80" y1="260" x2="320" y2="260" stroke="#2e7d32" stroke-width="1" opacity="0.3"/>
+
+  <text x="200" y="290" text-anchor="middle" class="impl">PublisherMain (processo Java)</text>
+  <text x="200" y="320" text-anchor="middle" class="impl-sub">gera leituras de umidade,</text>
+  <text x="200" y="338" text-anchor="middle" class="impl-sub">temperatura, ar e pH</text>
+  <text x="200" y="358" text-anchor="middle" class="impl-sub">e ENVIA ao broker</text>
+
+  <!-- ==================== BROKER ==================== -->
+  <g filter="url(#shadow)">
+    <rect x="410" y="170" width="280" height="200" rx="14" fill="#e3f2fd" stroke="#1565c0" stroke-width="3"/>
+  </g>
+  <text x="550" y="215" text-anchor="middle" class="role" fill="#0d47a1">BROKER</text>
+  <text x="550" y="240" text-anchor="middle" class="impl-sub">papel: corretor de mensagens</text>
+
+  <line x1="430" y1="260" x2="670" y2="260" stroke="#1565c0" stroke-width="1" opacity="0.3"/>
+
+  <text x="550" y="290" text-anchor="middle" class="impl">Mosquitto (Docker)</text>
+  <text x="550" y="312" text-anchor="middle" class="impl-sub">tcp://localhost:1883</text>
+  <text x="550" y="340" text-anchor="middle" class="impl-sub">RECEBE do publicador,</text>
+  <text x="550" y="358" text-anchor="middle" class="impl-sub">ENTREGA aos assinantes</text>
+
+  <!-- ==================== ASSINANTE ==================== -->
+  <g filter="url(#shadow)">
+    <rect x="760" y="170" width="280" height="200" rx="14" fill="#fff3e0" stroke="#e65100" stroke-width="3"/>
+  </g>
+  <text x="900" y="215" text-anchor="middle" class="role" fill="#bf360c">ASSINANTE</text>
+  <text x="900" y="240" text-anchor="middle" class="impl-sub">papel: aplicação consumidora</text>
+
+  <line x1="780" y1="260" x2="1020" y2="260" stroke="#e65100" stroke-width="1" opacity="0.3"/>
+
+  <text x="900" y="290" text-anchor="middle" class="impl">Dashboard Web</text>
+  <text x="900" y="320" text-anchor="middle" class="impl-sub">RECEBE leituras,</text>
+  <text x="900" y="338" text-anchor="middle" class="impl-sub">guarda em cache,</text>
+  <text x="900" y="358" text-anchor="middle" class="impl-sub">decide irrigação</text>
+
+  <!-- ==================== Setas com legenda ==================== -->
+
+  <!-- Publicador → Broker -->
+  <line x1="340" y1="270" x2="400" y2="270" stroke="#3d4651" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="370" y="252" text-anchor="middle" class="arrow">MQTT</text>
+  <text x="370" y="294" text-anchor="middle" class="arrow-sub">publish</text>
+
+  <!-- Broker → Assinante -->
+  <line x1="690" y1="270" x2="750" y2="270" stroke="#3d4651" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="720" y="252" text-anchor="middle" class="arrow">MQTT</text>
+  <text x="720" y="294" text-anchor="middle" class="arrow-sub">subscribe</text>
+
+  <!-- ==================== Caixa explicativa ==================== -->
+  <g>
+    <rect x="60" y="450" width="980" height="110" rx="10" fill="#f5f7f2" stroke="#aed581" stroke-width="1.5"/>
+
+    <text x="80" y="478" class="impl" font-weight="700">Como funciona</text>
+
+    <text x="80" y="504" class="caption">
+      O <tspan font-weight="700" fill="#1b5e20">publicador</tspan> não conhece o assinante; o
+      <tspan font-weight="700" fill="#bf360c">assinante</tspan> não conhece o publicador.
+    </text>
+    <text x="80" y="524" class="caption">
+      Os dois se comunicam apenas através do <tspan font-weight="700" fill="#0d47a1">broker</tspan>,
+      organizando mensagens em <tspan font-style="italic">tópicos</tspan> (ex.: <tspan font-family="Consolas,monospace">irrigacao/sensores/milho/umidade_solo</tspan>).
+    </text>
+    <text x="80" y="546" class="caption">
+      Esse desacoplamento é o que dá flexibilidade ao padrão IoT — sensores podem ser adicionados, removidos ou trocados sem mexer na aplicação.
+    </text>
+  </g>
+
+</svg>
