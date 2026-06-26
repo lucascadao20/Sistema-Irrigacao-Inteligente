@@ -147,7 +147,9 @@ public class ServidorWeb {
             String nova = body.get("cultura");
             if (nova != null && repositorioDeCultura.buscarPorNome(nova).isPresent()) {
                 state.setCulturaAtiva(nova.toLowerCase());
-                executor.dispararCicloImediato();
+                // O proximo ciclo regular de 30s ja captura a nova cultura.
+                // Nao disparamos ciclo imediato para evitar spam de alertas
+                // a cada troca de cultura no dropdown.
                 ctx.json(Map.of("ok", true, "cultura", state.getCulturaAtiva()));
             } else {
                 ctx.status(400).json(Map.of("ok", false, "erro", "cultura invalida"));
