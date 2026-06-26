@@ -1,29 +1,31 @@
 # Sistema de Irrigação Inteligente
 
-Sistema Java que automatiza decisões de irrigação combinando dados de sensores simulados (umidade do solo, temperatura, umidade do ar, pH) com dados climáticos reais consumidos da API do OpenWeatherMap. Roda em modo console ou em modo **dashboard web** com visualização em tempo real.
+Sistema Java que automatiza decisões de irrigação combinando leituras de sensores IoT publicadas via MQTT, dados climáticos reais da API do OpenWeatherMap e regras agronômicas da FAO. Cada cultura é tratada como um talhão independente, com histórico de decisões persistido em banco H2.
+
+Roda em **três modos**: dashboard web em tempo real, console interativo e demonstração com cenários pré-definidos.
 
 ## Funcionalidades
 
-- Leitura e validação de dados de sensores IoT (com simulador progressivo)
-- Consulta de clima em tempo real via OpenWeatherMap (com cache em caso de falha)
-- Decisão automática de irrigação por meio de três estratégias: **Modo Seco**, **Modo Úmido**, **Modo Emergencial**
-- Cálculo de volume de água com base em coeficiente de cultura (Kc) e dados FAO
-- Sistema de alertas em múltiplos canais (console + log + dashboard web)
-- Catálogo de 10 culturas pré-cadastradas (milho, soja, arroz, feijão, trigo, café, cana, algodão, tomate, alface)
-- **Três modos de execução**:
-  - **Demonstração** (`--demo`) — cenários pré-definidos
-  - **Tempo real** — loop interativo no console
-  - **Web** (`--web`) — dashboard HTTP com gauge animado, gráfico histórico e feed de alertas
+- Coleta de leituras de sensores IoT (umidade do solo, temperatura, umidade do ar, pH) via **MQTT**
+- **Umidade do solo independente por cultura** (10 talhões simulados, cada um com sua trajetória)
+- Decisão automática entre três estratégias: **Emergencial**, **Seco** e **Úmido**
+- Cálculo de volume de água baseado em coeficiente de cultura (Kc) e dados FAO
+- Sistema de alertas multi-canal (console + log + dashboard web)
+- **Persistência H2** de leituras e decisões — base para os relatórios de consumo
+- **Relatório de consumo por cultura e período** — via dashboard ou API REST
+- Catálogo de 10 culturas (milho, soja, arroz, feijão, trigo, café, cana, algodão, tomate, alface)
+- Recuperação automática a falhas de broker MQTT, API de clima e payloads inválidos
 
 ## Stack
 
-- Java 17
-- Maven
-- Gson 2.10.1 (parsing JSON, mapper do Javalin)
+- Java 17, Maven
+- **Eclipse Paho 1.2.5** (cliente MQTT)
+- **Mosquitto** via Docker (broker MQTT)
+- **H2 2.2.224** (banco embarcado, modo arquivo)
+- Javalin 6.1.6 (servidor web embutido)
+- Gson 2.10.1 (JSON)
 - SLF4J 2.0.9 + Logback 1.4.14 (logging)
-- **Javalin 6.1.6** (servidor web embutido)
 - Chart.js 4.4 (frontend, via CDN)
-- Inter + JetBrains Mono (Google Fonts)
 - JUnit 5.10.1 (testes)
 
 ## Arquitetura
@@ -35,281 +37,193 @@ ui  →  negocio  →  dados  →  modelo
 ```
 
 | Camada | Responsabilidade |
-|--------|-----------------|
-| **modelo** | Os dados do domínio — entidades e enums. Não depende de ninguém |
-| **negocio** | As regras — estratégias, fábrica, motor de regras e o serviço de ciclo |
-| **dados** | As fontes — clima (API), catálogo de culturas, sensores e notificadores |
-| **ui** | A apresentação — console e dashboard web |
+|---|---|
+| **modelo** | Entidades e enums do domínio. Não depende de ninguém |
+| **negocio** | Regras de irrigação — estratégias, motor de regras, serviço de ciclo |
+| **dados** | Fontes externas e persistência — MQTT, OpenWeatherMap, H2, sensores |
+| **ui** | Apresentação — console e dashboard web |
 
 ```
 com.irrigacao
 ├── Main.java
-├── ConfiguracaoApp.java         montagem do sistema (injeção de dependências manual)
-├── modelo/                      entidades + enums — não depende de ninguém
-│   ├── Sensor, LeituraSensor, Cultura, Irrigacao, DadosClimaticos, Alerta
-│   └── TipoSensor, StatusIrrigacao, NivelAlerta
-├── negocio/                     regras e orquestração
-│   ├── EstrategiaDeIrrigacao + EstrategiaModoSeco/Umido/Emergencial
-│   ├── FabricaDeEstrategia
-│   └── MotorDeRegras, ServicoDeCicloIrrigacao
-├── dados/                       fontes externas, persistência e notificadores
-│   ├── ServicoDeClima + ServicoDeClimaOpenWeatherMap + ClienteOpenWeatherMap
-│   ├── RepositorioDeCultura + RepositorioDeCulturaEmMemoria
-│   ├── NotificadorDeAlerta + NotificadorDeAlertaConsole/Log + NotificadorComposto
-│   └── SimuladorSensores, GerenciadorDeSensores, ProcessadorDeDados
-└── ui/                          apresentação
-    ├── console/                 InterfaceConsole, FormatadorDeConsole, LeitorDeEntrada
-    └── web/                     ServidorWeb, EstadoDoDashboard, ExecutorDeSimulacao, NotificadorDeAlertaWeb
+├── ConfiguracaoApp.java          montagem (injeção de dependências manual)
+├── modelo/                       entidades + enums
+├── negocio/                      regras
+│   ├── EstrategiaDeIrrigacao + 3 implementações (Emergencial/Seco/Umido)
+│   ├── FabricaDeEstrategia · MotorDeRegras · ServicoDeCicloIrrigacao
+├── dados/                        fontes externas e persistência
+│   ├── bd/                       repositórios H2 + ConexaoH2
+│   ├── clima/                    OpenWeatherMap (HTTP)
+│   ├── cultura/                  catálogo FAO
+│   ├── mqtt/                     coletor + cache de leituras
+│   ├── notificacao/              alertas (console / log / web / composto)
+│   └── sensores/                 gerenciador, processador, simulador local
+├── simulador/                    processo publicador MQTT (separado)
+│   ├── PublisherMain · GeradorLeituraProgressivo
+│   ├── AgendadorPublicacao · PublicadorMqtt · MqttPublisher
+└── ui/
+    ├── console/                  CLI interativa
+    └── web/                      Javalin + dashboard
 ```
 
 Frontend estático em `src/main/resources/static/` (`index.html`, `app.js`, `style.css`).
 
+## Documentação adicional
+
+- [`docs/requisitos.md`](docs/requisitos.md) — requisitos funcionais e não-funcionais
+- [`docs/arquitetura.svg`](docs/arquitetura.svg) — diagrama em camadas
+- [`docs/simulador.svg`](docs/simulador.svg) — padrão Publish/Subscribe com MQTT
+- [`docs/calculo-irrigacao.md`](docs/calculo-irrigacao.md) — detalhamento da lógica de decisão e cálculo de volume
+
 ## Design Patterns
 
 | Pattern | Aplicação |
-|---------|-----------|
-| Strategy | `EstrategiaDeIrrigacao` + 3 modos de irrigação |
-| Factory Method | `FabricaDeEstrategia` seleciona estratégia conforme contexto |
+|---|---|
+| Strategy | `EstrategiaDeIrrigacao` + 3 modos |
+| Factory Method | `FabricaDeEstrategia` |
 | Builder | `Irrigacao.builder()`, `DadosClimaticos.builder()` |
-| Composite | `NotificadorComposto` despacha alertas para múltiplos destinos |
-| Repository | `RepositorioDeCultura` / `RepositorioDeCulturaEmMemoria` |
+| Composite | `NotificadorComposto` despacha para múltiplos destinos |
+| Repository | `RepositorioDeCultura`, `RepositorioDeIrrigacao`, `RepositorioDeLeituraSensor` |
 | Adapter | `ServicoDeClimaOpenWeatherMap` adapta API externa à interface interna |
 | Facade | `ServicoDeCicloIrrigacao` simplifica uso do sistema |
+| Publish/Subscribe | Sensores publicam em tópicos MQTT; dashboard assina via wildcard |
 
 ## Pré-requisitos
 
-- Java 17+
-- Maven 3.8+
-- Chave de API do [OpenWeatherMap](https://openweathermap.org/api) (gratuita)
+- Java 17+, Maven 3.8+
+- **Docker** (para o broker Mosquitto, necessário no modo `--web`)
+- Chave de API do [OpenWeatherMap](https://openweathermap.org/api) (gratuita) — sem chave, o sistema usa clima padrão de fallback
 
 ## Configuração
-
-Copie o arquivo de exemplo e preencha com sua chave:
 
 ```powershell
 copy src\main\resources\config.properties.example src\main\resources\config.properties
 ```
 
-Edite `src/main/resources/config.properties`:
-
-```properties
-openweathermap.api.key=SUA_CHAVE_AQUI
-openweathermap.base.url=https://api.openweathermap.org/data/2.5
-cidade.padrao=Sao Paulo
-cidade.pais=BR
-```
-
-> Sem chave válida, o sistema continua funcionando usando dados climáticos padrão de fallback.
+Edite `src/main/resources/config.properties` e preencha sua chave OpenWeatherMap. As chaves `mqtt.*` já vêm com defaults adequados para o broker local.
 
 ## Como executar
 
 > **No PowerShell, sempre coloque o argumento `-Dexec.args` entre aspas** — o shell consome aspas internas. Use `"-Dexec.args=--demo"` ou o stop-parsing token `--%`.
 
-### Modo dashboard web (recomendado)
+### Modo dashboard web (recomendado — distribuído via MQTT)
 
-Abre um servidor HTTP local com simulação automática rodando a cada 30s:
+Requer **3 terminais** (broker + publisher + dashboard):
 
-```powershell
-mvn exec:java "-Dexec.args=--web"
-```
-
-Acesse **http://localhost:7070**. 
-
-Para usar outra porta:
-
-```powershell
-mvn exec:java "-Dexec.args=--web 8080"
-```
-
-O dashboard mostra:
-- Gauge circular animado de umidade do solo (verde / amarelo / laranja / vermelho conforme faixa)
-- Status atual da irrigação (ATIVADA / SUSPENSA / AGUARDANDO) com badge colorido
-- Estratégia ativa em destaque
-- Card de clima com emoji dinâmico, temperatura, vento, umidade do ar e previsão de chuva
-- Gráfico de linha com histórico de umidade e volume de água (Chart.js)
-- Feed de alertas em tempo real com cores por nível (INFO / AVISO / CRITICO / EMERGENCIA)
-- Seletor de cultura ao vivo (troca não reinicia o simulador)
-- Indicador de conexão pulsante e relógio em monospace
-
-### Modo demonstração
-
-Roda 3 cenários pré-definidos (umidade baixa, adequada e crítica):
-
-```powershell
-mvn exec:java "-Dexec.args=--demo"
-```
-
-### Modo tempo real (console)
-
-Pede cultura, nome do agricultor e intervalo entre ciclos. Roda em loop até `Ctrl+C`:
-
-```powershell
-mvn exec:java
-```
-
-### Via JAR empacotado
-
-```powershell
-mvn package -DskipTests
-java -jar target/sistema-irrigacao-inteligente-1.0.0.jar --web
-java -jar target/sistema-irrigacao-inteligente-1.0.0.jar --demo
-```
-
-## API REST (modo web)
-
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| GET | `/api/state` | Snapshot completo (clima, irrigação, histórico, alertas) |
-| GET | `/api/culturas` | Lista de culturas com parâmetros agronômicos |
-| POST | `/api/cultura` | Troca a cultura ativa. Body: `{ "cultura": "soja" }` |
-| GET | `/api/relatorios/consumo` | Relatório de consumo de água persistido no banco. Query params: `cultura` (opcional), `inicio` e `fim` em `ISO_LOCAL_DATE_TIME`. Defaults: últimos 7 dias, todas as culturas. |
-
-O frontend faz polling em `/api/state` a cada 3s.
-
-## Testes
-
-```powershell
-mvn test
-```
-
-Cobertura: **50 testes unitários** cobrindo modelo, negocio, dados e ui/web.
-
-## Build
-
-```powershell
-mvn clean package
-```
-
-Gera `target/sistema-irrigacao-inteligente-1.0.0.jar`.
-
-## Logs
-
-Logs são gravados em `logs/irrigacao.log` (rotação diária, retenção de 30 dias). Configuração em [logback.xml](src/main/resources/logback.xml).
-
-## Lógica de decisão
-
-A `FabricaDeEstrategia` seleciona a estratégia conforme o estado:
-
-1. **Emergencial** — umidade do solo < 70% do mínimo da cultura
-2. **Seco** — umidade do solo abaixo do mínimo (sem chuva)
-3. **Úmido** — previsão de chuva ou umidade do ar > 80%
-4. **Aguardando** — umidade adequada, nenhuma ação necessária
-
-Cada estratégia calcula o volume de água considerando déficit hídrico, coeficiente de cultura e ajustes por temperatura.
-
-## Simulador de Sensores via MQTT (modo `--web`)
-
-A partir desta versão, o dashboard web consome leituras de sensores publicadas
-por um processo externo via MQTT, em vez de gerá-las internamente. Os modos
-console e `--demo` continuam usando o `SimuladorSensores` local como fallback
-offline.
-
-### Componentes
-
-- **Broker:** Mosquitto local em Docker (`docker-compose.yml`).
-- **Publicador (sensor simulado):** `com.irrigacao.simulador.PublisherMain`,
-  processo Java separado que publica leituras dos 4 sensores a cada 5 s.
-- **Assinante:** `com.irrigacao.dados.mqtt.ColetorMqttSensores`, integrado ao
-  modo `--web`, atualiza um cache lido pelo ciclo de avaliação a cada 30 s.
-
-### Pré-requisitos
-
-- Docker.
-- Maven e Java 17+.
-- Arquivo `src/main/resources/config.properties` com as chaves `mqtt.*` (ver
-  `config.properties.example`).
-
-### Como rodar (3 terminais)
-
-Terminal **1** — broker:
-
+**Terminal 1 — broker MQTT:**
 ```bash
 docker compose up -d
 ```
 
-Terminal **2** — publicador (faz o papel dos sensores IoT):
-
+**Terminal 2 — publicador (faz o papel dos sensores IoT):**
 ```bash
 mvn compile
 mvn exec:java "-Dexec.mainClass=com.irrigacao.simulador.PublisherMain"
 ```
 
-Terminal **3** — dashboard:
+**Terminal 3 — dashboard web:**
+```bash
+mvn exec:java "-Dexec.args=--web"
+```
+
+Abra **http://localhost:7070**. Para outra porta: `"-Dexec.args=--web 8080"`.
+
+### Modo demonstração
 
 ```bash
-mvn exec:java "-Dexec.mainClass=com.irrigacao.Main" "-Dexec.args=--web 7070"
+mvn exec:java "-Dexec.args=--demo"
 ```
 
-Abrir <http://localhost:7070>.
+Roda 3 cenários pré-definidos (umidade baixa, adequada e crítica). Não usa MQTT — gera dados internamente com `SimuladorSensores`.
 
-### Encerrando
+### Modo tempo real (console)
 
-- Ctrl+C nos terminais 2 e 3.
-- `docker compose down` para parar o broker.
+```bash
+mvn exec:java
+```
 
-### Observações
+CLI interativa que pede cultura, nome do agricultor e intervalo. Roda em loop até `Ctrl+C`. Não usa MQTT.
 
-- O `com.irrigacao.dados.SimuladorSensores` (Random in-process) permanece em
-  uso nos modos `console` e `--demo` — não é o mesmo componente do publicador
-  MQTT (`com.irrigacao.simulador`).
-- O broker Mosquitto roda sem autenticação e sem TLS — **uso local apenas**.
-  Não exponha a porta `1883` para fora da máquina.
-- Se o broker subir **depois** do dashboard, reinicie o dashboard para
-  reconectar — o Paho só reconecta automaticamente após uma conexão inicial
-  bem-sucedida (`setAutomaticReconnect` não cobre falhas na conexão inicial).
+### Via JAR empacotado
 
-## Persistência em banco (H2 embarcado)
+```bash
+mvn package -DskipTests
+java -jar target/sistema-irrigacao-inteligente-1.0.0.jar --web
+```
 
-A partir desta versão, todas as **leituras dos sensores** e **decisões de
-irrigação** são persistidas em um banco H2 embarcado, em modo arquivo.
+## Arquitetura do modo web (Pub/Sub via MQTT)
 
-### Onde fica o banco
+```
+[Publicador]  ──MQTT publish──→  [Mosquitto]  ──MQTT subscribe──→  [Dashboard]
+ (PublisherMain)                    Docker                          (ServidorWeb)
+ publica 13 tópicos               localhost:1883                  assina via wildcard
+  · 10 culturas × umidade_solo                                      · cache por cultura
+  · 3 globais (temp/ar/pH)                                          · ciclo a cada 30 s
+                                                                    · persiste em H2
+```
 
-Arquivo `data/irrigacao.mv.db` na raiz do projeto. Esse caminho está em
-`.gitignore` — o banco é estritamente local, não vai para o repositório.
+**Componentes:**
 
-### O que é persistido
+- **Broker:** Mosquitto via [docker-compose.yml](docker-compose.yml).
+- **Publicador:** [`com.irrigacao.simulador.PublisherMain`](src/main/java/com/irrigacao/simulador/PublisherMain.java) — processo Java separado que mantém estado independente por cultura e publica a cada 5 s.
+- **Assinante:** [`ColetorMqttSensores`](src/main/java/com/irrigacao/dados/mqtt/ColetorMqttSensores.java) — integrado ao modo `--web`, assina `irrigacao/sensores/+/umidade_solo` (wildcard) + 3 tópicos fixos.
+- **Cache:** [`EstadoUltimasLeituras`](src/main/java/com/irrigacao/dados/mqtt/EstadoUltimasLeituras.java) — chave composta `(tipo, cultura)`; thread-safe via `ConcurrentHashMap`.
 
-| Tabela | Quando é gravada | Conteúdo |
+**Observações:**
+
+- Mosquitto roda sem autenticação e sem TLS — **uso local apenas**. Não exponha a porta 1883.
+- Se o broker subir **depois** do dashboard, reinicie o dashboard — `setAutomaticReconnect` do Paho só reconecta depois de uma conexão inicial bem-sucedida.
+- Encerrar tudo: `Ctrl+C` nos terminais 2 e 3 e `docker compose down`.
+
+## Persistência (H2 embarcado)
+
+Banco H2 em arquivo `data/irrigacao.mv.db` (gitignored). Schema em [`src/main/resources/schema.sql`](src/main/resources/schema.sql), aplicado idempotentemente no startup.
+
+| Tabela | Gravada por | Conteúdo |
 |---|---|---|
-| `leitura_sensor` | A cada mensagem MQTT recebida (modo `--web`) | sensor_id, tipo, valor, valida, recebido_em |
-| `irrigacao` | Ao final de cada ciclo de avaliação (todos os modos) | id, cultura_nome, status, volume_agua, motivo, estrategia_nome, umidade_solo, decidido_em |
+| `leitura_sensor` | `ColetorMqttSensores` a cada mensagem MQTT | sensor_id, tipo, valor, valida, recebido_em |
+| `irrigacao` | `ServicoDeCicloIrrigacao` ao final de cada ciclo | id, cultura_nome, status, volume_agua, motivo, estrategia_nome, umidade_solo, decidido_em |
 
-### Schema
+Para alterar o schema, apague o arquivo do banco e deixe o app recriar — não há migrações versionadas (Flyway/Liquibase) por design.
 
-O schema é definido em `src/main/resources/schema.sql` e aplicado
-automaticamente na primeira inicialização (idempotente via `IF NOT EXISTS`).
-Para **mudar o schema** sem recompilar, apague `data/irrigacao.mv.db` e
-deixe o app recriar.
+## API REST
 
-### Como consultar via dashboard
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `GET` | `/api/state` | Snapshot do dashboard (cultura ativa, clima, irrigação, histórico, alertas) |
+| `GET` | `/api/culturas` | Lista de culturas com parâmetros agronômicos |
+| `POST` | `/api/cultura` | Troca a cultura ativa. Body: `{ "cultura": "soja" }` |
+| `GET` | `/api/relatorios/consumo` | Relatório de consumo. Query: `cultura` (opcional), `inicio`, `fim` em `ISO_LOCAL_DATE_TIME`. Defaults: últimos 7 dias, todas as culturas |
 
-Abra `http://localhost:7070` e role até a seção **📈 Relatório de consumo**.
-Selecione a cultura (ou "Todas"), informe o período e clique em **Gerar**.
+O frontend faz polling em `/api/state` a cada 3 s.
 
-### Como consultar via API
+## Testes
 
-```
-GET /api/relatorios/consumo?cultura=milho&inicio=2026-06-14T00:00:00&fim=2026-06-21T23:59:59
-```
-
-Retorna `consumoTotal` (litros), `qtdIrrigacoes` e a lista de cada decisão
-no período.
-
-### Limitações conhecidas
-
-- Sem migrações versionadas (Flyway/Liquibase). Mudanças de schema exigem
-  apagar o arquivo do banco.
-- Banco em modo arquivo — apropriado para um único processo. Para múltiplos
-  processos simultâneos, migrar para PostgreSQL.
-
-## Estrutura do dashboard web
-
-```
-src/main/resources/static/
-├── index.html       Layout responsivo com hero, cards, gauge SVG e gráfico
-├── style.css        Variáveis CSS, paleta verde/azul, animações suaves
-└── app.js           Polling + Chart.js + atualização incremental do gauge
+```bash
+mvn test
 ```
 
-O servidor (`ServidorWeb`) usa Gson como `JsonMapper` do Javalin para serializar respostas. A simulação roda em thread daemon (`ExecutorDeSimulacao`) que dispara um ciclo a cada 30 segundos e atualiza o `EstadoDoDashboard` (estado em memória, thread-safe via `ConcurrentLinkedDeque`). Alertas são empurrados ao estado por `NotificadorDeAlertaWeb`, que implementa a interface `NotificadorDeAlerta` e é combinado com `NotificadorDeAlertaLog` via `NotificadorComposto`.
+**98 testes unitários** cobrindo todas as camadas (modelo, negocio, dados, ui, simulador). Repositórios H2 são testados contra banco em memória (`jdbc:h2:mem:...`). O coletor MQTT é testado sem broker via handler `processarMensagem` extraído.
+
+## Build
+
+```bash
+mvn clean package
+```
+
+Gera `target/sistema-irrigacao-inteligente-1.0.0.jar` (fat-jar com dependências, executável diretamente).
+
+## Logs
+
+Em `logs/irrigacao.log` (rotação diária, retenção de 30 dias). Configuração em [`logback.xml`](src/main/resources/logback.xml).
+
+## Lógica de decisão
+
+A `FabricaDeEstrategia` seleciona a estratégia na seguinte ordem — **solo tem prioridade sobre clima**:
+
+1. **Emergencial** — umidade do solo < 70% da mínima da cultura
+2. **Seco** — umidade do solo < mínima da cultura
+3. **Úmido** — umidade adequada, mas previsão de chuva ou umidade do ar > 80%
+4. **Aguardando** — umidade adequada e clima sem chuva, nenhuma ação
+
+Cada estratégia calcula o volume de água considerando déficit hídrico, coeficiente de cultura (Kc) e ajustes pela situação. Detalhamento em [`docs/calculo-irrigacao.md`](docs/calculo-irrigacao.md).
