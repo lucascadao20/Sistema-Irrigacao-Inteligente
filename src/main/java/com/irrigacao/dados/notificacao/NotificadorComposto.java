@@ -1,6 +1,5 @@
 package com.irrigacao.dados.notificacao;
 
-import com.irrigacao.dados.notificacao.NotificadorDeAlerta;
 import com.irrigacao.modelo.Alerta;
 
 import java.util.List;

@@ -2,10 +2,6 @@ package com.irrigacao.negocio;
 
 import com.irrigacao.modelo.Cultura;
 import com.irrigacao.modelo.DadosClimaticos;
-import com.irrigacao.negocio.EstrategiaDeIrrigacao;
-import com.irrigacao.negocio.EstrategiaModoEmergencial;
-import com.irrigacao.negocio.EstrategiaModoSeco;
-import com.irrigacao.negocio.EstrategiaModoUmido;
 
 public class FabricaDeEstrategia {
 
