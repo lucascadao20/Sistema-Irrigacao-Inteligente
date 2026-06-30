@@ -4,6 +4,8 @@ Sistema Java que automatiza decisões de irrigação combinando leituras de sens
 
 Roda em **três modos**: dashboard web em tempo real, console interativo e demonstração com cenários pré-definidos.
 
+Alunos: Filipe Andrade, Lucas Goncalves, Lucas Jesus
+
 ## Funcionalidades
 
 - Coleta de leituras de sensores IoT (umidade do solo, temperatura, umidade do ar, pH) via **MQTT**
